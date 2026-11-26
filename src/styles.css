@@ -252,3 +252,42 @@ code { background: var(--bg-2); padding: 0.05rem 0.35rem; border-radius: 0.35rem
   #print-root .md img { max-height: 220mm; }
   #print-root .md table { display: table; }
 }
+
+/* ---------- Editor con vista previa en vivo (CodeMirror) ---------- */
+.live-editor { min-height: 14rem; }
+.live-editor .cm-editor { background: transparent; color: var(--ink); min-height: 14rem; }
+.live-editor .cm-editor.cm-focused { outline: none; }
+.live-editor .cm-scroller { overflow: visible; font-family: var(--sans); line-height: 1.65; }
+.live-editor .cm-content { padding: 0 0 6rem; font-size: calc(16px * var(--txt)); caret-color: var(--accent); }
+.live-editor .cm-line { padding: 0; }
+.live-editor .cm-placeholder { color: var(--ink-3); opacity: 0.7; }
+.live-editor .cm-cursor, .live-editor .cm-dropCursor { border-left: 2px solid var(--accent); }
+.live-editor .cm-selectionBackground, .live-editor .cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background: var(--accent-soft) !important; }
+
+.cm-h { font-family: var(--serif); font-weight: 400; letter-spacing: -0.01em; line-height: 1.2; padding-top: 0.5em !important; }
+.cm-h1 { font-size: 1.9em; } .cm-h2 { font-size: 1.55em; } .cm-h3 { font-size: 1.28em; }
+.cm-h4, .cm-h5, .cm-h6 { font-size: 1.12em; }
+.cm-strong { font-weight: 700; }
+.cm-em { font-style: italic; }
+.cm-strike { text-decoration: line-through; color: var(--ink-3); }
+.cm-code { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 0.88em; background: var(--bg-2); border-radius: 0.35em; padding: 0.08em 0.3em; }
+.cm-link { color: var(--accent); text-decoration: underline; text-underline-offset: 0.15em; }
+.cm-olmark { color: var(--ink-3); }
+.cm-bullet { display: inline-block; width: 1.1em; color: var(--ink-3); }
+.cm-quote { border-left: 3px solid var(--accent); padding-left: 0.9em !important; color: var(--ink-2); background: var(--surface-2); }
+.cm-hr { border-top: 1px solid var(--line-2); margin: 0.8em 0; height: 0; }
+.cm-task { width: 1.1em; height: 1.1em; margin: 0 0.5em 0 0; accent-color: var(--accent); vertical-align: -0.12em; cursor: pointer; }
+.cm-done { color: var(--ink-3); text-decoration: line-through; }
+.cm-done .cm-task { text-decoration: none; }
+.cm-img { display: block; max-width: 100%; max-height: 28rem; height: auto; border-radius: 0.7em; margin: 0.5em 0; background: var(--bg-2); min-height: 2rem; min-width: 2rem; }
+
+.cm-codeblock { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 0.86em; background: var(--surface); border-left: 1px solid var(--line); border-right: 1px solid var(--line); padding: 0 0.9em !important; }
+.cm-cb-first { border-top: 1px solid var(--line); border-radius: 0.8em 0.8em 0 0; padding-top: 0.3em !important; }
+.cm-cb-last { border-bottom: 1px solid var(--line); border-radius: 0 0 0.8em 0.8em; padding-bottom: 0.3em !important; }
+.cm-fence { color: var(--ink-3); }
+.cm-fence-off { font-size: 0; line-height: 0; height: 0.4em; overflow: hidden; }
+.cm-fence-off * { font-size: 0 !important; }
+
+.cm-trow { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 0.86em; background: var(--surface-2); padding: 0 0.6em !important; }
+.cm-thead { font-weight: 600; background: var(--bg-2); }
+.cm-tdelim { color: var(--ink-3); }

@@ -44,4 +44,4 @@ npm test         # pruebas de la sincronización (contra un GitHub falso)
 npm run build
 ```
 
-Stack: React + Vite + TypeScript + Zustand, `marked` + `DOMPurify` (Markdown), `turndown` (HTML → Markdown al pegar).
+Stack: React + Vite + TypeScript + Zustand, CodeMirror 6 (editor en vivo), `marked` + `DOMPurify` (Markdown), `turndown` (HTML → Markdown al pegar).
