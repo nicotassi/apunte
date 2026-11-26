@@ -203,8 +203,9 @@ h1.title { font-family: var(--serif); font-weight: 400; font-size: clamp(2.3rem,
 .seg button.on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
 .field { width: 100%; padding: 0.7rem 0.85rem; border: 1px solid var(--line-2); border-radius: var(--radius-sm); background: var(--bg); outline: none; margin-bottom: 0.6rem; }
 .field:focus { border-color: var(--accent); }
-.steps { padding-left: 1.2rem; color: var(--ink-2); margin: 0.5rem 0 0.9rem; }
-.steps li { margin-bottom: 0.4rem; }
+.steps { padding: 0; list-style: none; color: var(--ink-2); margin: 0.5rem 0 0.9rem; }
+.steps li { margin-bottom: 0.9rem; }
+.steps .btn { display: flex; margin-bottom: 0.3rem; color: var(--ink) !important; text-decoration: none; }
 .steps a, .set-sec a { color: var(--accent); }
 code { background: var(--bg-2); padding: 0.05rem 0.35rem; border-radius: 0.35rem; font-size: 0.85em; }
 .sync-card { display: flex; gap: 0.7rem; align-items: center; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 0.7rem 0.85rem; margin-bottom: 0.7rem; }

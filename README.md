@@ -19,8 +19,8 @@ Cada push a `main` la republica (`.github/workflows/deploy.yml`; en *Settings �
 
 ## Sincronizar con GitHub
 
-1. Creá un repo **privado** vacío (ej. `apunte-notas`). No uses este repo: es público.
-2. GitHub → Settings → Developer settings → *Fine-grained tokens*: acceso solo a ese repo, permiso **Contents: Read and write**.
+1. En Ajustes hay un botón que crea el repo **privado** (`apunte-notas`) ya cargado. No uses este repo: es público.
+2. Otro botón crea el token con el permiso justo (**Contents: Read and write**): elegí solo ese repo.
 3. En Apunte: Ajustes → Sincronizar con GitHub → pegá `usuario/apunte-notas` y el token.
 
 En el repo queda:

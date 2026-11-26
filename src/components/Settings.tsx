@@ -82,9 +82,18 @@ export function Settings({ route }: { route: Route }) {
             {!connected ? (
               <>
                 <ol className="steps small">
-                  <li>Creá un repo <b>privado</b> vacío (ej. <code>apunte-notas</code>). No uses el de la app: es público.</li>
-                  <li>En GitHub: Settings → Developer settings → <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">Fine-grained tokens</a>. Dale acceso solo a ese repo, con permiso <b>Contents: Read and write</b>.</li>
-                  <li>Pegá acá el repo y el token.</li>
+                  <li>
+                    <a className="btn" href="https://github.com/new?name=apunte-notas&visibility=private&description=Notas+de+Apunte" target="_blank" rel="noopener noreferrer">1 · Crear el repo privado</a>
+                    <div className="muted tiny">En GitHub tocá el botón verde <b>Create repository</b>. Ya viene con el nombre y en privado.</div>
+                  </li>
+                  <li>
+                    <a className="btn" href="https://github.com/settings/personal-access-tokens/new?name=Apunte&description=Sincronizar+las+notas+de+Apunte&contents=write&expires_in=none" target="_blank" rel="noopener noreferrer">2 · Crear la llave (token)</a>
+                    <div className="muted tiny">En <b>Repository access</b> elegí <b>Only select repositories</b> y marcá <b>apunte-notas</b>. Abajo de todo tocá <b>Generate token</b> y copiá el código que empieza con <code>github_pat_</code>.</div>
+                  </li>
+                  <li>
+                    <b>3 · Pegá acá</b> el nombre del repo y el código.
+                    <div className="muted tiny">El nombre es tu usuario de GitHub, una barra, y <code>apunte-notas</code>.</div>
+                  </li>
                 </ol>
                 <input className="field" placeholder="usuario/apunte-notas" value={repo} onChange={(e) => setRepo(e.target.value)} autoCapitalize="none" autoCorrect="off" spellCheck={false} />
                 <input className="field" placeholder="Token (github_pat_…)" type="password" value={token} onChange={(e) => setToken(e.target.value)} autoCapitalize="none" autoCorrect="off" spellCheck={false} />
