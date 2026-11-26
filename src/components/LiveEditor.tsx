@@ -3,7 +3,7 @@ import { EditorState, Prec } from '@codemirror/state';
 import { EditorView, keymap, placeholder } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
-import { livePreview } from '../lib/livepreview';
+import { livePreview, tablePreview } from '../lib/livepreview';
 import { pastedMarkdown } from '../lib/paste';
 
 interface Props {
@@ -45,6 +45,7 @@ export function LiveEditor({ value, onChange, readOnly, autoFocus, onPasteImages
           EditorView.lineWrapping,
           placeholder('Escribí algo… (acepta Markdown)'),
           livePreview,
+          tablePreview,
           EditorState.readOnly.of(!!readOnly),
           EditorView.editable.of(!readOnly),
           EditorView.contentAttributes.of({ spellcheck: 'true', autocapitalize: 'sentences', autocorrect: 'on' }),

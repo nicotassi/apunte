@@ -3,7 +3,7 @@
 Notas simples, rápidas y sin fricción. Pensada para el celular (PWA instalable y offline), con la calma de Google Keep y algunas cosas más:
 
 - **Carpetas** y **tags** (filtrá tocando un tag en el menú).
-- **Markdown con vista previa en vivo** (como Obsidian): el formato aparece mientras escribís y los símbolos (`**`, `#`, `[]()`) se ocultan al salir de ese texto. Los `- [ ]` se tildan tocándolos.
+- **Markdown con vista previa en vivo** (como Obsidian, tablas incluidas): el formato aparece mientras escribís y los símbolos (`**`, `#`, `[]()`) se ocultan al salir de ese texto. Los `- [ ]` se tildan tocándolos.
 - **Imágenes**: desde la galería/cámara o pegadas. Se comprimen solas.
 - **Pegar con formato**: copiás de ChatGPT (títulos, negritas, listas, tablas, código) y al pegar queda como Markdown.
 - **Exportar a PDF** una nota, o todas (desde Ajustes). Usa "Guardar como PDF" del sistema.

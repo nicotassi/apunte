@@ -97,6 +97,16 @@ export function Editor({ id, route }: { id: string; route: Route }) {
     v.dispatch(v.state.replaceSelection(text), { scrollIntoView: true });
     v.focus();
   };
+  const insertTable = () => {
+    const v = viewRef.current;
+    if (!v) return;
+    const { from, to } = v.state.selection.main;
+    const l = v.state.doc.lineAt(from);
+    const lead = l.text.trim() ? '\n\n' : '';
+    const tpl = '| Columna 1 | Columna 2 |\n| --- | --- |\n|  |  |\n';
+    v.dispatch({ changes: { from, to, insert: lead + tpl }, selection: { anchor: from + lead.length + 2, head: from + lead.length + 11 } });
+    v.focus();
+  };
   const addImages = async (files: File[]) => {
     try {
       let out = '';
@@ -223,6 +233,7 @@ export function Editor({ id, route }: { id: string; route: Route }) {
             <button onClick={() => linePrefix('> ')} aria-label="Cita" type="button"><Icon name="quote" /></button>
             <button onClick={() => wrap('`')} aria-label="Código" type="button"><Icon name="code" /></button>
             <button onClick={() => { const v = viewRef.current; if (!v) return; const { from, to } = v.state.selection.main; const t = v.state.sliceDoc(from, to) || 'texto'; v.dispatch({ changes: { from, to, insert: `[${t}](https://)` }, selection: { anchor: from + t.length + 3, head: from + t.length + 11 } }); v.focus(); }} aria-label="Enlace" type="button"><Icon name="link" /></button>
+            <button onClick={insertTable} aria-label="Insertar tabla" type="button"><Icon name="table" /></button>
             <button onClick={() => fileRef.current?.click()} aria-label="Insertar imagen" type="button"><Icon name="image" /></button>
             <button onClick={() => void pasteFromClipboard()} aria-label="Pegar con formato" type="button"><Icon name="clipboard" /></button>
           </div>

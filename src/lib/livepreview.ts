@@ -1,7 +1,8 @@
-import { syntaxTree } from '@codemirror/language';
-import type { Range } from '@codemirror/state';
+import { ensureSyntaxTree, syntaxTree } from '@codemirror/language';
+import { type EditorState, type Range, StateEffect, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 import { imageURL } from './images';
+import { renderMd } from './md';
 
 /**
  * Vista previa en vivo (como Obsidian): el texto se ve con su formato mientras se escribe.
@@ -167,3 +168,51 @@ export const livePreview = ViewPlugin.fromClass(
   },
   { decorations: (v) => v.decorations },
 );
+
+
+/* ───────── Tablas dibujadas ─────────
+ * Un bloque que reemplaza varias líneas solo puede venir de un StateField (no de un ViewPlugin).
+ * Mientras el cursor está dentro de la tabla se ve el texto con las barras; al salir, se dibuja la tabla.
+ */
+class TableWidget extends WidgetType {
+  constructor(readonly source: string) { super(); }
+  eq(o: TableWidget) { return o.source === this.source; }
+  toDOM() {
+    const d = document.createElement('div');
+    d.className = 'md cm-tablewrap';
+    d.innerHTML = renderMd(this.source);
+    return d;
+  }
+  ignoreEvent() { return false; }
+}
+
+const focusEffect = StateEffect.define<boolean>();
+const focusField = StateField.define<boolean>({
+  create: () => false,
+  update: (v, tr) => { for (const e of tr.effects) if (e.is(focusEffect)) return e.value; return v; },
+});
+
+function buildTables(state: EditorState, focused: boolean): DecorationSet {
+  const out: Range<Decoration>[] = [];
+  const tree = ensureSyntaxTree(state, state.doc.length, 50) ?? syntaxTree(state);
+  tree.iterate({
+    enter: (node) => {
+      if (node.name !== 'Table') return;
+      const touched = focused && state.selection.ranges.some((r) => r.from <= node.to && r.to >= node.from);
+      if (!touched) out.push(Decoration.replace({ widget: new TableWidget(state.sliceDoc(node.from, node.to)), block: true }).range(node.from, node.to));
+      return false;
+    },
+  });
+  return Decoration.set(out, true);
+}
+
+const tableField = StateField.define<DecorationSet>({
+  create: (s) => buildTables(s, false),
+  update: (v, tr) => {
+    const changed = tr.docChanged || !!tr.selection || tr.effects.some((e) => e.is(focusEffect));
+    return changed ? buildTables(tr.state, tr.state.field(focusField)) : v;
+  },
+  provide: (f) => EditorView.decorations.from(f),
+});
+
+export const tablePreview = [focusField, EditorView.focusChangeEffect.of((_s, focusing) => focusEffect.of(focusing)), tableField];

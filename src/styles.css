@@ -229,7 +229,7 @@ code { background: var(--bg-2); padding: 0.05rem 0.35rem; border-radius: 0.35rem
 .md a { color: var(--accent); }
 .md img { max-width: 100%; height: auto; border-radius: 0.7em; display: block; margin: 0.8em 0; }
 .md hr { border: 0; border-top: 1px solid var(--line-2); margin: 1.4em 0; }
-.md table { border-collapse: collapse; margin: 0.9em 0; display: block; overflow-x: auto; max-width: 100%; }
+.md table { border-collapse: collapse; margin: 0.9em 0; display: table; }
 .md th, .md td { border: 1px solid var(--line-2); padding: 0.4em 0.7em; text-align: left; }
 .md th { background: var(--bg-2); font-weight: 600; }
 .img-ph { background: var(--bg-2); }
@@ -291,3 +291,6 @@ code { background: var(--bg-2); padding: 0.05rem 0.35rem; border-radius: 0.35rem
 .cm-trow { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 0.86em; background: var(--surface-2); padding: 0 0.6em !important; }
 .cm-thead { font-weight: 600; background: var(--bg-2); }
 .cm-tdelim { color: var(--ink-3); }
+
+.cm-tablewrap { margin: 0.6em 0; overflow-x: auto; max-width: 100%; }
+.cm-tablewrap table { margin: 0; }
