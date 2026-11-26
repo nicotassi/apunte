@@ -7,6 +7,7 @@ import { parseRepo } from '../lib/sync';
 import { ago } from '../lib/util';
 import { Icon } from './Icons';
 import { IconBtn, Segmented } from './ui';
+import { TITLE_FONTS } from '../lib/fonts';
 
 export function Settings({ route }: { route: Route }) {
   const settings = useStore((s) => s.settings);
@@ -65,6 +66,19 @@ export function Settings({ route }: { route: Route }) {
             <div className="set-row">
               <label>Tema</label>
               <Segmented value={settings.theme} onChange={(theme) => setSettings({ theme })} options={[{ v: 'auto', label: 'Auto' }, { v: 'light', label: 'Claro' }, { v: 'dark', label: 'Oscuro' }]} />
+            </div>
+            <div className="set-row">
+              <label>Letra de los títulos</label>
+              <Segmented
+                value={settings.titleFont}
+                onChange={(titleFont) => setSettings({ titleFont })}
+                options={[
+                  { v: 'fraunces', label: 'Fraunces', font: TITLE_FONTS.fraunces.css },
+                  { v: 'lora', label: 'Lora', font: TITLE_FONTS.lora.css },
+                  { v: 'newsreader', label: 'Newsreader', font: TITLE_FONTS.newsreader.css },
+                  { v: 'sans', label: 'Sans', font: TITLE_FONTS.sans.css },
+                ]}
+              />
             </div>
             <div className="set-row">
               <label>Tamaño de la app<span className="muted small"> botones y menús</span></label>

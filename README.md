@@ -7,7 +7,7 @@ Notas simples, rápidas y sin fricción. Pensada para el celular (PWA instalable
 - **Imágenes**: desde la galería/cámara o pegadas. Se comprimen solas.
 - **Pegar con formato**: copiás de ChatGPT (títulos, negritas, listas, tablas, código) y al pegar queda como Markdown.
 - **Exportar a PDF** una nota, o todas (desde Ajustes). Usa "Guardar como PDF" del sistema.
-- **Tamaño de la app** (S/M/L/XL) independiente del **tamaño del texto de las notas**.
+- **Letra de los títulos** a elección (Fraunces, Lora, Newsreader o Sans), **tamaño de la app** (S/M/L/XL) independiente del **tamaño del texto de las notas**.
 - **Local + nube**: todo se guarda en el dispositivo (IndexedDB) y, si querés, se sincroniza con un repo **privado** de GitHub como archivos `.md`.
 - Búsqueda, fijar notas, papelera, modo oscuro, copia de seguridad, importar `.md`.
 - En Android, "Compartir → Apunte" crea una nota con el texto compartido.

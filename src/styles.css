@@ -18,6 +18,7 @@
   --radius-sm: 12px;
   --serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
   --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --tw: 500; /* grosor de los títulos */
   --ui: 1; /* tamaño de la interfaz */
   --txt: 1; /* tamaño del texto de las notas */
   --safe-b: env(safe-area-inset-bottom, 0px);
@@ -72,7 +73,7 @@ button { cursor: pointer; }
 .top { display: flex; align-items: center; gap: 0.4rem; margin: 0 -0.4rem; }
 .page-head { margin: 0.5rem 0 1.1rem; }
 .eyebrow { font-size: 0.72rem; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.09em; font-weight: 600; }
-h1.title { font-family: var(--serif); font-weight: 500; font-size: clamp(1.9rem, 7.5vw, 2.7rem); line-height: 1.1; letter-spacing: -0.015em; margin: 0.25rem 0 0; overflow-wrap: anywhere; }
+h1.title { font-family: var(--serif); font-weight: var(--tw, 500); font-size: clamp(1.9rem, 7.5vw, 2.7rem); line-height: 1.1; letter-spacing: -0.015em; margin: 0.25rem 0 0; overflow-wrap: anywhere; }
 .group-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); font-weight: 600; margin: 1rem 0.2rem 0.6rem; }
 
 .icon-btn { width: 2.5rem; height: 2.5rem; border-radius: 0.8rem; border: 0; background: transparent; color: var(--ink-2); display: grid; place-items: center; flex: none; }
@@ -99,7 +100,7 @@ h1.title { font-family: var(--serif); font-weight: 500; font-size: clamp(1.9rem,
 .card:active { transform: scale(0.99); }
 .card-img { display: block; width: calc(100% + 1.8rem); margin: -0.85rem -0.9rem 0.7rem; height: 7.5rem; object-fit: cover; background: var(--bg-2); }
 .card-pin { position: absolute; top: 0.6rem; right: 0.65rem; color: var(--accent); background: color-mix(in srgb, var(--surface) 80%, transparent); border-radius: 999px; padding: 0.15rem; display: grid; }
-.card-title { font-family: var(--serif); font-weight: 500; font-size: 1.08rem; line-height: 1.25; margin-bottom: 0.35rem; overflow-wrap: anywhere; padding-right: 1rem; }
+.card-title { font-family: var(--serif); font-weight: var(--tw, 500); font-size: 1.08rem; line-height: 1.25; margin-bottom: 0.35rem; overflow-wrap: anywhere; padding-right: 1rem; }
 .card-text { color: var(--ink-2); font-size: 0.84rem; white-space: pre-line; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 7; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
 .chips { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.65rem; }
 .chip { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.72rem; padding: 0.15rem 0.55rem; border-radius: 999px; background: var(--bg-2); color: var(--ink-2); border: 0; font-weight: 500; }
@@ -124,7 +125,7 @@ h1.title { font-family: var(--serif); font-weight: 500; font-size: clamp(1.9rem,
 .sidebar.open { transform: none; }
 .brand { display: flex; align-items: center; gap: 0.6rem; padding: 0.2rem 0.6rem 1rem; }
 .brand-mark { width: 1.9rem; height: 1.9rem; border-radius: 0.6rem; background: var(--ink); color: var(--bg); display: grid; place-items: center; }
-.brand-name { font-family: var(--serif); font-weight: 500; font-size: 1.45rem; line-height: 1; letter-spacing: -0.01em; }
+.brand-name { font-family: var(--serif); font-weight: var(--tw, 500); font-size: 1.45rem; line-height: 1; letter-spacing: -0.01em; }
 .side-scroll { flex: 1; overflow-y: auto; margin: 0 -0.3rem; padding: 0 0.3rem; }
 .nav-row { display: flex; align-items: center; border-radius: 0.75rem; }
 .nav-row.active { background: var(--surface); box-shadow: var(--shadow); }
@@ -164,7 +165,7 @@ h1.title { font-family: var(--serif); font-weight: 500; font-size: clamp(1.9rem,
 .ed-head { display: flex; align-items: center; gap: 0.1rem; padding: calc(0.45rem + var(--safe-t)) 0.5rem 0.35rem; flex: none; }
 .ed-head-title { font-weight: 500; font-size: 1.3rem; margin-left: 0.3rem; }
 .ed-scroll { flex: 1; overflow-y: auto; padding: 0.4rem 1.2rem 1.2rem; -webkit-overflow-scrolling: touch; }
-.ed-title { width: 100%; border: 0; outline: none; background: transparent; font-family: var(--serif); font-weight: 500; font-size: 1.7rem; line-height: 1.2; letter-spacing: -0.01em; padding: 0.2rem 0; color: var(--ink); }
+.ed-title { width: 100%; border: 0; outline: none; background: transparent; font-family: var(--serif); font-weight: var(--tw, 500); font-size: 1.7rem; line-height: 1.2; letter-spacing: -0.01em; padding: 0.2rem 0; color: var(--ink); }
 .ed-title::placeholder, .ed-body::placeholder { color: var(--ink-3); opacity: 0.7; }
 .ed-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; margin: 0.4rem 0 1rem; }
 .chip.btn.folder { cursor: pointer; padding: 0.25rem 0.65rem; }
@@ -187,7 +188,7 @@ h1.title { font-family: var(--serif); font-weight: 500; font-size: clamp(1.9rem,
 @keyframes up { from { transform: translateY(40px); opacity: 0; } }
 @media (min-width: 700px) { .sheet-wrap { align-items: center; } .sheet { border-radius: 1.4rem; } }
 .sheet-grab { width: 2.4rem; height: 0.28rem; background: var(--line-2); border-radius: 99px; margin: 0.3rem auto 0.6rem; }
-.sheet-title { font-family: var(--serif); font-weight: 500; font-size: 1.2rem; padding: 0 0.6rem 0.4rem; }
+.sheet-title { font-family: var(--serif); font-weight: var(--tw, 500); font-size: 1.2rem; padding: 0 0.6rem 0.4rem; }
 .sheet-item { display: flex; align-items: center; gap: 0.8rem; width: 100%; padding: 0.8rem 0.7rem; border: 0; background: transparent; border-radius: 0.8rem; text-align: left; font-size: 0.95rem; color: var(--ink); }
 .sheet-item:hover, .sheet-item:active { background: var(--bg-2); }
 .sheet-item.danger { color: var(--bad); }
@@ -215,7 +216,7 @@ code { background: var(--bg-2); padding: 0.05rem 0.35rem; border-radius: 0.35rem
 /* ---------- Markdown (el tamaño usa px: no cambia con el tamaño de la app) ---------- */
 .md { font-size: calc(16px * var(--txt)); line-height: 1.65; overflow-wrap: anywhere; color: var(--ink); }
 .md > :first-child { margin-top: 0; }
-.md h1, .md h2, .md h3, .md h4 { font-family: var(--serif); font-weight: 500; line-height: 1.25; margin: 1.3em 0 0.45em; letter-spacing: -0.01em; }
+.md h1, .md h2, .md h3, .md h4 { font-family: var(--serif); font-weight: var(--tw, 500); line-height: 1.25; margin: 1.3em 0 0.45em; letter-spacing: -0.01em; }
 .md h1 { font-size: 1.6em; } .md h2 { font-size: 1.38em; } .md h3 { font-size: 1.2em; } .md h4 { font-size: 1.08em; }
 .md p { margin: 0.6em 0; }
 .md ul, .md ol { padding-left: 1.4em; margin: 0.5em 0; }
@@ -244,7 +245,7 @@ code { background: var(--bg-2); padding: 0.05rem 0.35rem; border-radius: 0.35rem
   #print-root { display: block; }
   #print-root .print-note { page-break-after: always; }
   #print-root .print-note:last-child { page-break-after: auto; }
-  #print-root h1 { font-family: var(--serif); font-weight: 500; font-size: 24pt; margin: 0 0 4pt; }
+  #print-root h1 { font-family: var(--serif); font-weight: var(--tw, 500); font-size: 24pt; margin: 0 0 4pt; }
   #print-root .print-tags { color: #8f8a80; font-size: 10pt; margin: 0 0 12pt; }
   #print-root .md { font-size: 11.5pt; color: #1c1b19; }
   #print-root .md pre, #print-root .md blockquote, #print-root .md tr, #print-root .md img { page-break-inside: avoid; }
@@ -264,7 +265,7 @@ code { background: var(--bg-2); padding: 0.05rem 0.35rem; border-radius: 0.35rem
 .live-editor .cm-cursor, .live-editor .cm-dropCursor { border-left: 2px solid var(--accent); }
 .live-editor .cm-selectionBackground, .live-editor .cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background: var(--accent-soft) !important; }
 
-.cm-h { font-family: var(--serif); font-weight: 500; letter-spacing: -0.01em; line-height: 1.3; padding-top: 0.5em !important; }
+.cm-h { font-family: var(--serif); font-weight: var(--tw, 500); letter-spacing: -0.01em; line-height: 1.3; padding-top: 0.5em !important; }
 .cm-h1 { font-size: 1.6em; } .cm-h2 { font-size: 1.38em; } .cm-h3 { font-size: 1.2em; }
 .cm-h4, .cm-h5, .cm-h6 { font-size: 1.08em; }
 .cm-strong { font-weight: 700; }

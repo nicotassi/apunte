@@ -38,11 +38,11 @@ export function SheetItem({ icon, label, onClick, danger, sub }: { icon?: string
   );
 }
 
-export function Segmented<T extends string | number>({ value, options, onChange }: { value: T; options: { v: T; label: string }[]; onChange: (v: T) => void }) {
+export function Segmented<T extends string | number>({ value, options, onChange }: { value: T; options: { v: T; label: string; font?: string }[]; onChange: (v: T) => void }) {
   return (
     <div className="seg" role="group">
       {options.map((o) => (
-        <button key={String(o.v)} className={o.v === value ? 'on' : ''} onClick={() => onChange(o.v)} type="button">{o.label}</button>
+        <button key={String(o.v)} className={o.v === value ? 'on' : ''} style={o.font ? { fontFamily: o.font } : undefined} onClick={() => onChange(o.v)} type="button">{o.label}</button>
       ))}
     </div>
   );

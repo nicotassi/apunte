@@ -27,6 +27,7 @@ export interface Settings {
   theme: 'auto' | 'light' | 'dark';
   uiSize: 0 | 1 | 2 | 3; // tamaño de la interfaz de la app (no de las notas)
   textSize: 0 | 1 | 2; // tamaño del texto de las notas
+  titleFont: 'fraunces' | 'lora' | 'newsreader' | 'sans'; // letra de los títulos
   sync: SyncConfig;
 }
 
@@ -45,5 +46,6 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'auto',
   uiSize: 1,
   textSize: 1,
+  titleFont: 'fraunces',
   sync: { repo: '', branch: '', token: '', auto: true },
 };
