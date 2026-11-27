@@ -55,7 +55,8 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 /* La interfaz se mide en rem: cambiar --ui agranda o achica la app entera, pero no el texto de las notas (que usa px). */
 html { font-size: calc(16px * var(--ui)); }
-html, body, #root { height: 100%; }
+html { background: var(--bg); }
+html, body, #root { height: 100%; min-height: 100dvh; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
   font-family: var(--sans); font-size: 0.9375rem; line-height: 1.5;

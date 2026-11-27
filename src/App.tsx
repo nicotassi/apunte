@@ -104,9 +104,22 @@ export default function App() {
     root.style.setProperty('--serif', tf.css);
     root.style.setProperty('--tw', String(tf.weight));
     root.style.setProperty('--sans', BODY_FONTS[settings.bodyFont] ?? BODY_FONTS.inter);
-    const dark = settings.theme === 'dark' || (settings.theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#151412' : '#f7f4ee');
   }, [settings.theme, settings.uiSize, settings.textSize, settings.titleFont, settings.bodyFont]);
+
+  // Color de las barras del sistema (arriba y abajo) igual al de la app, también si el teléfono cambia de modo claro a oscuro.
+  useEffect(() => {
+    const mq = matchMedia('(prefers-color-scheme: dark)');
+    const apply = () => {
+      const dark = settings.theme === 'dark' || (settings.theme === 'auto' && mq.matches);
+      const metas = [...document.querySelectorAll('meta[name="theme-color"]')];
+      metas.slice(1).forEach((m) => m.remove()); // las dos del arranque (claro/oscuro) pasan a ser una sola que se actualiza
+      metas[0]?.removeAttribute('media');
+      metas[0]?.setAttribute('content', dark ? '#151412' : '#f7f4ee');
+    };
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, [settings.theme]);
 
   const list = useMemo(() => {
     const needle = q.trim().toLowerCase();
