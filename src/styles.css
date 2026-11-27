@@ -440,3 +440,11 @@ code { background: var(--bg-2); padding: 0.05rem 0.35rem; border-radius: 0.35rem
 .cm-tooltip.cm-tooltip-autocomplete > ul { font-family: var(--sans) !important; max-height: 15rem; }
 .cm-tooltip.cm-tooltip-autocomplete > ul > li { padding: 0.65rem 0.9rem !important; font-size: 0.92rem; color: var(--ink); }
 .cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] { background: var(--accent-soft) !important; color: var(--ink) !important; }
+
+/* ---------- Barra de herramientas reordenable ---------- */
+.toolbar-wrap { position: relative; flex: none; }
+.toolbar { touch-action: pan-x; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.toolbar.reordering { overflow: hidden; touch-action: none; }
+.toolbar button.lifted { position: relative; z-index: 3; background: var(--surface); box-shadow: var(--shadow-lg); color: var(--accent); transition: none; }
+.toolbar.reordering button:not(.lifted) { transition: transform 0.22s var(--ios); }
+.tb-hint { position: absolute; left: 50%; bottom: calc(100% + 0.5rem); transform: translateX(-50%); background: var(--ink); color: var(--bg); font-size: 0.78rem; padding: 0.4rem 0.9rem; border-radius: 999px; white-space: nowrap; box-shadow: var(--shadow-lg); animation: rise 0.25s var(--ios) backwards; pointer-events: none; z-index: 4; }

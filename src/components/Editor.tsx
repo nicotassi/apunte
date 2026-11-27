@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { redo, undo } from '@codemirror/commands';
 import type { EditorView } from '@codemirror/view';
 import { startCompletion } from '@codemirror/autocomplete';
-import { useStore, updateNote, deleteForever, dropIfEmpty, newNote, renameLinks } from '../lib/store';
+import { useStore, updateNote, deleteForever, dropIfEmpty, newNote, renameLinks, setSettings } from '../lib/store';
 import { closeOverlay, navigate, type Route } from '../lib/router';
 import { backlinks, cleanTitle, findNote } from '../lib/wikilinks';
 import { hasRichFormat, htmlToMarkdown } from '../lib/paste';
@@ -15,6 +15,7 @@ import { Icon } from './Icons';
 import { IconBtn, Sheet, SheetItem } from './ui';
 import { LiveEditor } from './LiveEditor';
 import { ColorPicker, FolderPicker } from './Pickers';
+import { Toolbar, type ToolItem } from './Toolbar';
 
 export function Editor({ id, route }: { id: string; route: Route }) {
   const note = useStore((s) => s.notes[id]);
@@ -205,6 +206,34 @@ export function Editor({ id, route }: { id: string; route: Route }) {
 
   const mentions = useMemo(() => (note ? backlinks({ ...note, title }, allNotes) : []), [note, title, allNotes]);
 
+  const toolbarOrder = useStore((s) => s.settings.toolbar);
+  const withView = (f: (v: EditorView) => void) => () => { const v = viewRef.current; if (v) f(v); };
+  const toolItems: ToolItem[] = [
+    { id: 'undo', icon: 'undo', label: 'Deshacer', onClick: withView((v) => { undo(v); v.focus(); }) },
+    { id: 'redo', icon: 'redo', label: 'Rehacer', onClick: withView((v) => { redo(v); v.focus(); }) },
+    { id: 'mic', icon: 'mic', label: listening ? 'Parar dictado' : 'Dictar por voz', onClick: toggleDictation, className: listening ? 'rec' : '' },
+    { id: 'bold', icon: 'bold', label: 'Negrita', onClick: () => wrap('**') },
+    { id: 'italic', icon: 'italic', label: 'Cursiva', onClick: () => wrap('*') },
+    { id: 'heading', icon: 'heading', label: 'Título', onClick: () => linePrefix('## ') },
+    { id: 'list', icon: 'list', label: 'Lista', onClick: () => linePrefix('- ') },
+    { id: 'tasks', icon: 'check', label: 'Lista de tareas', onClick: () => linePrefix('- [ ] ') },
+    { id: 'quote', icon: 'quote', label: 'Cita', onClick: () => linePrefix('> ') },
+    { id: 'code', icon: 'code', label: 'Código', onClick: () => wrap('`') },
+    {
+      id: 'link', icon: 'link', label: 'Enlace',
+      onClick: withView((v) => {
+        const { from, to } = v.state.selection.main;
+        const t = v.state.sliceDoc(from, to) || 'texto';
+        v.dispatch({ changes: { from, to, insert: `[${t}](https://)` }, selection: { anchor: from + t.length + 3, head: from + t.length + 11 } });
+        v.focus();
+      }),
+    },
+    { id: 'notelink', icon: 'notelink', label: 'Enlace a otra nota', onClick: withView((v) => { insertText('[['); startCompletion(v); }) },
+    { id: 'table', icon: 'table', label: 'Insertar tabla', onClick: insertTable },
+    { id: 'image', icon: 'image', label: 'Insertar imagen', onClick: () => fileRef.current?.click() },
+    { id: 'paste', icon: 'clipboard', label: 'Pegar con formato', onClick: () => void pasteFromClipboard() },
+  ];
+
   if (!note) return null;
   const folder = note.folderId ? folders[note.folderId] : null;
   const words = body.trim() ? body.trim().split(/\s+/).length : 0;
@@ -302,23 +331,7 @@ export function Editor({ id, route }: { id: string; route: Route }) {
         </div>
 
         {!readOnly && (
-          <div className="toolbar" onMouseDown={(e) => e.preventDefault()}>
-            <button onClick={() => { const v = viewRef.current; if (v) { undo(v); v.focus(); } }} aria-label="Deshacer" type="button"><Icon name="undo" /></button>
-            <button onClick={() => { const v = viewRef.current; if (v) { redo(v); v.focus(); } }} aria-label="Rehacer" type="button"><Icon name="redo" /></button>
-            <button className={listening ? 'rec' : ''} onClick={toggleDictation} aria-label={listening ? 'Parar dictado' : 'Dictar por voz'} type="button"><Icon name="mic" /></button>
-            <button onClick={() => wrap('**')} aria-label="Negrita" type="button"><Icon name="bold" /></button>
-            <button onClick={() => wrap('*')} aria-label="Cursiva" type="button"><Icon name="italic" /></button>
-            <button onClick={() => linePrefix('## ')} aria-label="Título" type="button"><Icon name="heading" /></button>
-            <button onClick={() => linePrefix('- ')} aria-label="Lista" type="button"><Icon name="list" /></button>
-            <button onClick={() => linePrefix('- [ ] ')} aria-label="Lista de tareas" type="button"><Icon name="check" /></button>
-            <button onClick={() => linePrefix('> ')} aria-label="Cita" type="button"><Icon name="quote" /></button>
-            <button onClick={() => wrap('`')} aria-label="Código" type="button"><Icon name="code" /></button>
-            <button onClick={() => { const v = viewRef.current; if (!v) return; const { from, to } = v.state.selection.main; const t = v.state.sliceDoc(from, to) || 'texto'; v.dispatch({ changes: { from, to, insert: `[${t}](https://)` }, selection: { anchor: from + t.length + 3, head: from + t.length + 11 } }); v.focus(); }} aria-label="Enlace" type="button"><Icon name="link" /></button>
-            <button onClick={() => { const v = viewRef.current; if (!v) return; insertText('[['); startCompletion(v); }} aria-label="Enlace a otra nota" type="button"><Icon name="notelink" /></button>
-            <button onClick={insertTable} aria-label="Insertar tabla" type="button"><Icon name="table" /></button>
-            <button onClick={() => fileRef.current?.click()} aria-label="Insertar imagen" type="button"><Icon name="image" /></button>
-            <button onClick={() => void pasteFromClipboard()} aria-label="Pegar con formato" type="button"><Icon name="clipboard" /></button>
-          </div>
+          <Toolbar items={toolItems} order={toolbarOrder} onReorder={(ids) => setSettings({ toolbar: ids })} />
         )}
         <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => { const f = [...(e.target.files ?? [])]; e.target.value = ''; if (f.length) void addImages(f); }} />
         {listening && <div className="listening"><span className="rec-dot" />{interim || 'Escuchando… hablá'}</div>}

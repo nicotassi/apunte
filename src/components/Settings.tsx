@@ -68,6 +68,10 @@ export function Settings({ route }: { route: Route }) {
               <Segmented value={settings.theme} onChange={(theme) => setSettings({ theme })} options={[{ v: 'auto', label: 'Auto' }, { v: 'light', label: 'Claro' }, { v: 'dark', label: 'Oscuro' }]} />
             </div>
             <div className="set-row">
+              <label>Barra de herramientas<span className="muted small"> mantené apretado un botón y arrastralo</span></label>
+              <button className="btn small" disabled={settings.toolbar.length === 0} onClick={() => setSettings({ toolbar: [] })} type="button">Orden de fábrica</button>
+            </div>
+            <div className="set-row">
               <label>Letra del texto<span className="muted small"> en toda la app</span></label>
               <Segmented
                 value={settings.bodyFont}

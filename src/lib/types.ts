@@ -34,6 +34,7 @@ export interface Settings {
   textSize: 0 | 1 | 2; // tamaño del texto de las notas
   view: 'grid' | 'list' | 'large'; // cómo se ven las notas en la lista
   titleFont: 'claude' | 'fraunces' | 'lora' | 'newsreader' | 'sans'; // letra de los títulos
+  toolbar: string[]; // orden de los botones de la barra del editor (vacío = el de fábrica)
   bodyFont: 'inter' | 'claude' | 'system'; // letra del texto y de toda la app
   sync: SyncConfig;
 }
@@ -56,5 +57,6 @@ export const DEFAULT_SETTINGS: Settings = {
   view: 'grid',
   titleFont: 'fraunces',
   bodyFont: 'inter',
+  toolbar: [],
   sync: { repo: '', branch: '', token: '', auto: true },
 };
