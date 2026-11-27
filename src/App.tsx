@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useStore, initStore, newNote, emptyTrash, setSettings } from './lib/store';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useStore, initStore, newNote, emptyTrash, setSettings, updateNote, duplicateNotes, deleteForever } from './lib/store';
 import { folderChain, withDescendants } from './lib/folders';
 import { closeOverlay, navigate, useRoute } from './lib/router';
 import { applyUpdate, checkForUpdate, useUpdate } from './lib/update';
@@ -7,6 +7,8 @@ import { Sidebar } from './components/Sidebar';
 import { NoteCard } from './components/NoteCard';
 import { Editor } from './components/Editor';
 import { Settings } from './components/Settings';
+import { ColorPicker, FolderPicker } from './components/Pickers';
+import type { NoteColor } from './lib/types';
 import { Icon } from './components/Icons';
 import { IconBtn, Sheet, SheetItem } from './components/ui';
 import { BODY_FONTS, TITLE_FONTS } from './lib/fonts';
@@ -26,6 +28,30 @@ export default function App() {
   const [searching, setSearching] = useState(false);
   const [viewSheet, setViewSheet] = useState(false);
 
+  // ---- selección de varias notas
+  const [selecting, setSelecting] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [pick, setPick] = useState<null | 'folder' | 'color'>(null);
+  const [toast, setToast] = useState<{ msg: string; undo?: () => void } | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout>>();
+  const say = (msg: string, undo?: () => void) => {
+    setToast({ msg, undo });
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 6000);
+  };
+  const startSelecting = (id?: string) => {
+    if (!selecting) history.pushState({ apunteSel: true }, '', location.href); // así el botón "atrás" del celular solo sale de la selección
+    setSelecting(true);
+    if (id) setSelected(new Set([id]));
+  };
+  const stopSelecting = (fromHistory = false) => {
+    setSelecting(false);
+    setSelected(new Set());
+    setPick(null);
+    if (!fromHistory && history.state?.apunteSel) history.back();
+  };
+  const toggleSel = (id: string) => setSelected((cur) => { const n = new Set(cur); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+
   useEffect(() => {
     void initStore().then(() => {
       // Contenido compartido desde otra app (Android: Compartir → Apunte).
@@ -42,6 +68,14 @@ export default function App() {
     const t = setInterval(() => void checkForUpdate(), 30 * 60_000);
     return () => clearInterval(t);
   }, []);
+
+  useEffect(() => {
+    const onPop = () => { if (selecting) stopSelecting(true); };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  });
+  // al cambiar de lista (carpeta, tag, papelera) o abrir una nota se cierra la selección
+  useEffect(() => { if (selecting) stopSelecting(); }, [route.view, route.arg, route.note, route.settings]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Tema, tamaño de la interfaz y del texto de las notas.
   useEffect(() => {
@@ -90,9 +124,49 @@ export default function App() {
     navigate({ view: route.view, arg: route.arg, note: id });
   };
 
+  const ids = [...selected];
+  const word = (n: number) => `${n} ${n === 1 ? 'nota' : 'notas'}`;
+  const snapshot = (list: string[]) => list.map((id) => ({ id, folderId: notes[id]?.folderId ?? null, color: notes[id]?.color ?? null, trashed: !!notes[id]?.trashed }));
+  const restore = (snap: ReturnType<typeof snapshot>) => () => snap.forEach((x) => updateNote(x.id, { folderId: x.folderId, color: x.color, trashed: x.trashed }));
+
+  const doMove = (folderId: string | null) => {
+    const snap = snapshot(ids);
+    ids.forEach((id) => updateNote(id, { folderId }));
+    say(`${word(ids.length)} movida${ids.length === 1 ? '' : 's'}`, restore(snap));
+    stopSelecting();
+  };
+  const doColor = (color: NoteColor | null) => {
+    const snap = snapshot(ids);
+    ids.forEach((id) => updateNote(id, { color }));
+    say(`Color cambiado en ${word(ids.length)}`, restore(snap));
+    stopSelecting();
+  };
+  const doDuplicate = () => {
+    const copies = duplicateNotes(ids);
+    say(`${word(copies.length)} duplicada${copies.length === 1 ? '' : 's'}`, () => copies.forEach(deleteForever));
+    stopSelecting();
+  };
+  const doTrash = () => {
+    const snap = snapshot(ids);
+    ids.forEach((id) => updateNote(id, { trashed: true }));
+    say(`${word(ids.length)} a la papelera`, restore(snap));
+    stopSelecting();
+  };
+  const doRestore = () => {
+    const snap = snapshot(ids);
+    ids.forEach((id) => updateNote(id, { trashed: false }));
+    say(`${word(ids.length)} restaurada${ids.length === 1 ? '' : 's'}`, restore(snap));
+    stopSelecting();
+  };
+  const doDeleteForever = () => {
+    if (!confirm(`¿Eliminar para siempre ${word(ids.length)}? No se puede deshacer.`)) return;
+    ids.forEach(deleteForever);
+    stopSelecting();
+  };
+
   const grid = (items: typeof list) => (
     <div className={`grid-notes v-${settings.view}`}>
-      {items.map((n) => <NoteCard key={n.id} note={n} folder={n.folderId ? folders[n.folderId] : undefined} route={route} />)}
+      {items.map((n) => <NoteCard key={n.id} note={n} folder={n.folderId ? folders[n.folderId] : undefined} route={route} selecting={selecting} selected={selected.has(n.id)} onToggle={() => toggleSel(n.id)} onLongPress={() => (selecting ? toggleSel(n.id) : startSelecting(n.id))} />)}
     </div>
   );
 
@@ -103,13 +177,23 @@ export default function App() {
         {updateAvailable && (
           <button className="update-bar" onClick={applyUpdate} type="button">Hay una versión nueva · tocá para actualizar</button>
         )}
-        <div className="top">
-          <IconBtn icon="menu" label="Menú" onClick={() => setDrawer(true)} />
-          <div className="grow" />
-          {route.view === 'trash' && list.length > 0 && <button className="btn small danger" onClick={() => { if (confirm('¿Vaciar la papelera?')) emptyTrash(); }} type="button">Vaciar</button>}
-          <IconBtn icon={settings.view === 'list' ? 'rows' : settings.view === 'large' ? 'large' : 'grid'} label="Cómo ver las notas" onClick={() => setViewSheet(true)} />
-          <IconBtn icon={searching ? 'close' : 'search'} label="Buscar" onClick={() => { setSearching(!searching); if (searching) setQ(''); }} />
-        </div>
+        {selecting ? (
+          <div className="top selbar">
+            <IconBtn icon="close" label="Cancelar selección" onClick={() => stopSelecting()} />
+            <div className="sel-count">{selected.size === 0 ? 'Elegí notas' : word(selected.size)}</div>
+            <div className="grow" />
+            <button className="btn small" onClick={() => setSelected(selected.size === list.length ? new Set() : new Set(list.map((n) => n.id)))} type="button">{selected.size === list.length && list.length > 0 ? 'Ninguna' : 'Todas'}</button>
+          </div>
+        ) : (
+          <div className="top">
+            <IconBtn icon="menu" label="Menú" onClick={() => setDrawer(true)} />
+            <div className="grow" />
+            {route.view === 'trash' && list.length > 0 && <button className="btn small danger" onClick={() => { if (confirm('¿Vaciar la papelera?')) emptyTrash(); }} type="button">Vaciar</button>}
+            {list.length > 0 && <IconBtn icon="select" label="Seleccionar notas" onClick={() => startSelecting()} />}
+            <IconBtn icon={settings.view === 'list' ? 'rows' : settings.view === 'large' ? 'large' : 'grid'} label="Cómo ver las notas" onClick={() => setViewSheet(true)} />
+            <IconBtn icon={searching ? 'close' : 'search'} label="Buscar" onClick={() => { setSearching(!searching); if (searching) setQ(''); }} />
+          </div>
+        )}
 
         <div className="page-head">
           <div className="eyebrow">{eyebrow}</div>
@@ -147,8 +231,34 @@ export default function App() {
         ) : grid(list)}
       </main>
 
-      {route.view !== 'trash' && !route.note && !route.settings && (
+      {route.view !== 'trash' && !route.note && !route.settings && !selecting && (
         <button className="fab" onClick={create} aria-label="Nueva nota" type="button"><Icon name="plus" size={26} /></button>
+      )}
+
+      {selecting && (
+        <div className="actionbar">
+          {route.view === 'trash' ? (
+            <>
+              <button onClick={doRestore} disabled={!ids.length} type="button"><Icon name="restore" /><span>Restaurar</span></button>
+              <button className="danger" onClick={doDeleteForever} disabled={!ids.length} type="button"><Icon name="trash" /><span>Eliminar</span></button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => setPick('folder')} disabled={!ids.length} type="button"><Icon name="folder" /><span>Mover</span></button>
+              <button onClick={doDuplicate} disabled={!ids.length} type="button"><Icon name="duplicate" /><span>Duplicar</span></button>
+              <button onClick={() => setPick('color')} disabled={!ids.length} type="button"><Icon name="palette" /><span>Color</span></button>
+              <button className="danger" onClick={doTrash} disabled={!ids.length} type="button"><Icon name="trash" /><span>Eliminar</span></button>
+            </>
+          )}
+        </div>
+      )}
+      {pick === 'folder' && <FolderPicker title={`Mover ${word(ids.length)} a…`} onPick={doMove} onClose={() => setPick(null)} />}
+      {pick === 'color' && <ColorPicker title={`Color para ${word(ids.length)}`} onPick={doColor} onClose={() => setPick(null)} />}
+      {toast && (
+        <div className="toast-bar">
+          <span>{toast.msg}</span>
+          {toast.undo && <button onClick={() => { toast.undo?.(); setToast(null); }} type="button">Deshacer</button>}
+        </div>
       )}
 
       {viewSheet && (

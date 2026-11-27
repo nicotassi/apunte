@@ -3,6 +3,7 @@
 Notas simples, rápidas y sin fricción. Pensada para el celular (PWA instalable y offline), con la calma de Google Keep y algunas cosas más:
 
 - **Carpetas** (que se pueden anidar: subcarpetas, mover, renombrar) y **tags**.
+- **Seleccionar varias notas** (mantené apretada una, o el botón de arriba) para mover, duplicar, cambiar color o eliminar, con aviso para deshacer.
 - **Colores** para las notas (8 colores suaves, se ven en la tarjeta y en el editor).
 - **Tres vistas** de la lista: grilla, lista compacta y grande.
 - **Dictado por voz**: botón de micrófono en el editor. Decí "nueva línea", "nuevo párrafo" o "punto y aparte" para dar formato.

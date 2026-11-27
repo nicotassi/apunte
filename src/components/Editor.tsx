@@ -1,19 +1,18 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { redo, undo } from '@codemirror/commands';
 import type { EditorView } from '@codemirror/view';
-import { useStore, updateNote, deleteForever, dropIfEmpty, addFolder } from '../lib/store';
+import { useStore, updateNote, deleteForever, dropIfEmpty } from '../lib/store';
 import { closeOverlay, type Route } from '../lib/router';
 import { hasRichFormat, htmlToMarkdown } from '../lib/paste';
 import { addImage } from '../lib/images';
 import { exportPdf } from '../lib/pdf';
 import { downloadNoteMd } from '../lib/io';
 import { ago, normTag } from '../lib/util';
-import { folderRows } from '../lib/folders';
 import { dictationSupported, formatDictation, startDictation } from '../lib/dictation';
-import { NOTE_COLORS } from '../lib/types';
 import { Icon } from './Icons';
 import { IconBtn, Sheet, SheetItem } from './ui';
 import { LiveEditor } from './LiveEditor';
+import { ColorPicker, FolderPicker } from './Pickers';
 
 export function Editor({ id, route }: { id: string; route: Route }) {
   const note = useStore((s) => s.notes[id]);
@@ -299,25 +298,8 @@ export function Editor({ id, route }: { id: string; route: Route }) {
           {!readOnly && <SheetItem icon="trash" label="Mover a la papelera" danger onClick={trash} />}
         </Sheet>
       )}
-      {sheet === 'color' && (
-        <Sheet title="Color de la nota" onClose={() => setSheet(null)}>
-          <div className="swatches">
-            <button className={`swatch none${!note.color ? ' on' : ''}`} onClick={() => { updateNote(id, { color: null }); setSheet(null); }} aria-label="Sin color" type="button">∅</button>
-            {NOTE_COLORS.map((c) => (
-              <button key={c} className={`swatch c-${c}${note.color === c ? ' on' : ''}`} onClick={() => { updateNote(id, { color: c }); setSheet(null); }} aria-label={c} type="button" />
-            ))}
-          </div>
-        </Sheet>
-      )}
-      {sheet === 'folder' && (
-        <Sheet title="Carpeta" onClose={() => setSheet(null)}>
-          <SheetItem icon="notes" label="Sin carpeta" sub={!note.folderId ? '✓' : undefined} onClick={() => { updateNote(id, { folderId: null }); setSheet(null); }} />
-          {folderRows(folders).map((r) => (
-            <SheetItem key={r.folder.id} icon="folder" label={r.path} sub={note.folderId === r.folder.id ? '✓' : undefined} onClick={() => { updateNote(id, { folderId: r.folder.id }); setSheet(null); }} />
-          ))}
-          <SheetItem icon="plus" label="Nueva carpeta…" onClick={() => { const n = window.prompt('Nombre de la carpeta'); const fid = n ? addFolder(n) : null; if (fid) updateNote(id, { folderId: fid }); setSheet(null); }} />
-        </Sheet>
-      )}
+      {sheet === 'color' && <ColorPicker title="Color de la nota" current={note.color} onPick={(c) => { updateNote(id, { color: c }); setSheet(null); }} onClose={() => setSheet(null)} />}
+      {sheet === 'folder' && <FolderPicker current={note.folderId} onPick={(f) => { updateNote(id, { folderId: f }); setSheet(null); }} onClose={() => setSheet(null)} />}
     </div>
   );
 }

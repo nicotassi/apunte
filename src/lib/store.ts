@@ -105,6 +105,18 @@ export function updateNote(id: string, patch: Partial<Pick<Note, 'title' | 'body
   scheduleSync();
 }
 
+/** Copias de varias notas (mismo contenido, carpeta, tags y color). Devuelve los ids nuevos. */
+export function duplicateNotes(ids: string[]): string[] {
+  const out: string[] = [];
+  for (const id of ids) {
+    const n = get().notes[id];
+    if (!n) continue;
+    out.push(newNote({ title: n.title ? `${n.title} (copia)` : '', body: n.body, folderId: n.folderId, tags: [...n.tags], color: n.color ?? null }));
+  }
+  scheduleSync();
+  return out;
+}
+
 export function deleteForever(id: string) {
   const { [id]: _gone, ...rest } = get().notes;
   set({ notes: rest });
