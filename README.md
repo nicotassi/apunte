@@ -13,6 +13,7 @@ Notas simples, rápidas y sin fricción. Pensada para el celular (PWA instalable
 - **Exportar a PDF** una nota, o todas (desde Ajustes). Usa "Guardar como PDF" del sistema.
 - **Letra** a elección, para los títulos (Claude, Fraunces, Lora, Newsreader o Sans) y para todo el texto (Inter, Claude o Sistema), **tamaño de la app** (S/M/L/XL) independiente del **tamaño del texto de las notas**.
 - **Local + nube**: todo se guarda en el dispositivo (IndexedDB) y, si querés, se sincroniza con un repo **privado** de GitHub como archivos `.md`.
+- **Transiciones estilo iPhone**: las pantallas se deslizan, las hojas suben y bajan, y hay gestos (deslizar desde el borde para volver o abrir el menú, arrastrar una hoja hacia abajo). Respeta "reducir movimiento" del sistema.
 - Búsqueda, fijar notas, papelera, modo oscuro, copia de seguridad, importar `.md`.
 - En Android, "Compartir → Apunte" crea una nota con el texto compartido.
 

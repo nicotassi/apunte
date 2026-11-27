@@ -19,6 +19,8 @@
   --serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
   --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --tw: 500; /* grosor de los títulos */
+  --ios: cubic-bezier(0.32, 0.72, 0, 1); /* la curva de movimiento de iOS */
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ui: 1; /* tamaño de la interfaz */
   --txt: 1; /* tamaño del texto de las notas */
   --c-terracota: #f6dccd; --c-naranja: #f9e3c2; --c-amarillo: #f7efb9; --c-verde: #dcebd0;
@@ -125,9 +127,10 @@ h1.title { font-family: var(--serif); font-weight: var(--tw, 500); font-size: cl
 .update-bar { width: 100%; border: 0; background: var(--ink); color: var(--bg); border-radius: var(--radius-sm); padding: 0.55rem; font-size: 0.8rem; margin-bottom: 0.5rem; }
 
 /* ---------- Menú lateral ---------- */
-.scrim { position: fixed; inset: 0; background: rgba(20, 15, 5, 0.4); z-index: 20; }
-.sidebar { position: fixed; top: 0; bottom: 0; left: 0; width: min(84vw, 20rem); background: var(--bg); border-right: 1px solid var(--line); z-index: 21; display: flex; flex-direction: column; padding: calc(1rem + var(--safe-t)) 0.8rem calc(0.8rem + var(--safe-b)); transform: translateX(-102%); transition: transform 0.22s ease; box-shadow: var(--shadow-lg); }
-.sidebar:not(.open) { box-shadow: none; visibility: hidden; transition: transform 0.22s ease, visibility 0s 0.22s; }
+.scrim { position: fixed; inset: 0; background: rgba(20, 15, 5, 0.4); z-index: 20; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+.scrim.on { opacity: 1; pointer-events: auto; }
+.sidebar { position: fixed; top: 0; bottom: 0; left: 0; width: min(84vw, 20rem); background: var(--bg); border-right: 1px solid var(--line); z-index: 21; display: flex; flex-direction: column; padding: calc(1rem + var(--safe-t)) 0.8rem calc(0.8rem + var(--safe-b)); transform: translateX(-102%); transition: transform 0.4s var(--ios); box-shadow: var(--shadow-lg); }
+.sidebar:not(.open) { box-shadow: none; visibility: hidden; transition: transform 0.4s var(--ios), visibility 0s 0.4s; }
 .sidebar.open { transform: none; }
 .brand { display: flex; align-items: center; gap: 0.6rem; padding: 0.2rem 0.6rem 1rem; }
 .brand-mark { width: 1.9rem; height: 1.9rem; border-radius: 0.6rem; background: var(--ink); color: var(--bg); display: grid; place-items: center; }
@@ -189,9 +192,8 @@ h1.title { font-family: var(--serif); font-weight: var(--tw, 500); font-size: cl
 .toast { position: absolute; left: 50%; bottom: 4.5rem; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 0.5rem 1rem; border-radius: 999px; font-size: 0.8rem; max-width: 90%; text-align: center; box-shadow: var(--shadow-lg); }
 
 /* ---------- Hojas inferiores ---------- */
-.sheet-wrap { position: fixed; inset: 0; z-index: 40; background: rgba(20, 15, 5, 0.4); display: flex; align-items: flex-end; justify-content: center; }
-.sheet { width: 100%; max-width: 32rem; max-height: 80vh; overflow-y: auto; background: var(--surface); border-radius: 1.4rem 1.4rem 0 0; padding: 0.5rem 0.7rem calc(0.8rem + var(--safe-b)); box-shadow: var(--shadow-lg); animation: up 0.18s ease; }
-@keyframes up { from { transform: translateY(40px); opacity: 0; } }
+.sheet-wrap { position: fixed; inset: 0; z-index: 40; animation: fade-in 0.3s ease backwards; background: rgba(20, 15, 5, 0.4); display: flex; align-items: flex-end; justify-content: center; }
+.sheet { width: 100%; max-width: 32rem; max-height: 80vh; overflow-y: auto; background: var(--surface); border-radius: 1.4rem 1.4rem 0 0; padding: 0.5rem 0.7rem calc(0.8rem + var(--safe-b)); box-shadow: var(--shadow-lg); animation: sheet-in 0.42s var(--ios) backwards; transition: transform 0.25s var(--ios); }
 @media (min-width: 700px) { .sheet-wrap { align-items: center; } .sheet { border-radius: 1.4rem; } }
 .sheet-grab { width: 2.4rem; height: 0.28rem; background: var(--line-2); border-radius: 99px; margin: 0.3rem auto 0.6rem; }
 .sheet-title { font-family: var(--serif); font-weight: var(--tw, 500); font-size: 1.2rem; padding: 0 0.6rem 0.4rem; }
@@ -366,3 +368,61 @@ code { background: var(--bg-2); padding: 0.05rem 0.35rem; border-radius: 0.35rem
 .v-list .card.selecting { padding-left: 2.8rem; }
 .v-list .card.selecting .card-main { padding-top: 0; }
 .v-list .card-check { top: 50%; transform: translateY(-50%); left: 0.8rem; }
+
+/* ---------- Movimiento (estilo iPhone) ---------- */
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes fade-out { to { opacity: 0; } }
+@keyframes sheet-in { from { transform: translateY(100%); } }
+@keyframes sheet-out { from { transform: translateY(var(--dy, 0px)); } to { transform: translateY(100%); } }
+@keyframes slide-in { from { transform: translateX(100%); } }
+@keyframes slide-out { from { transform: translateX(var(--dx, 0px)); } to { transform: translateX(100%); } }
+@keyframes pop-in { from { transform: scale(0.6); opacity: 0; } }
+@keyframes rise { from { transform: translateY(14px); opacity: 0; } }
+@keyframes bar-in { from { transform: translateY(100%); } }
+@keyframes card-in { from { transform: translateY(16px) scale(0.97); opacity: 0; } }
+
+/* pantalla de nota / ajustes: se desliza desde la derecha y la de atrás se corre un poco */
+.overlay { position: fixed; inset: 0; z-index: 30; background: var(--bg); animation: slide-in 0.4s var(--ios) backwards; box-shadow: -12px 0 40px -18px rgba(0, 0, 0, 0.35); }
+.overlay.leaving { animation: slide-out 0.34s var(--ios) forwards; pointer-events: none; }
+.overlay .editor-wrap { position: absolute; }
+.main { transition: transform 0.4s var(--ios), opacity 0.4s ease; }
+.app.ov .main { transform: translateX(-22%); opacity: 0.85; }
+@media (min-width: 900px) {
+  .overlay { background: transparent; box-shadow: none; animation: fade-in 0.25s ease backwards; }
+  .overlay .editor { animation: modal-in 0.35s var(--ios) backwards; }
+  .overlay.leaving { animation: fade-out 0.25s ease forwards; }
+  .app.ov .main { transform: none; opacity: 1; }
+}
+@keyframes modal-in { from { transform: scale(0.96) translateY(10px); opacity: 0; } }
+
+/* tarjetas: entran de a una, y responden al toque */
+.card { animation: card-in 0.5s var(--ios) backwards; animation-delay: calc(var(--i, 0) * 35ms); transition: transform 0.18s var(--ios), outline-color 0.2s ease, background 0.25s ease; }
+.card:active { transform: scale(0.97); }
+.card-check { transition: background 0.2s ease, border-color 0.2s ease; }
+.card-check.on { animation: pop-in 0.35s var(--spring); }
+.page-head, .subfolders { animation: rise 0.45s var(--ios) backwards; }
+
+/* botones: se hunden un poco al tocarlos */
+.icon-btn, .btn, .nav-item, .nav-more, .nav-add, .nav-chev, .sheet-item, .chip.btn, .toolbar button, .actionbar button, .seg button, .sync-foot, .swatch {
+  transition: transform 0.15s var(--ios), background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.icon-btn:active, .btn:active, .nav-item:active, .sheet-item:active, .chip.btn:active, .toolbar button:active, .actionbar button:active, .sync-foot:active { transform: scale(0.94); }
+.swatch:active { transform: scale(0.88); }
+.swatch.on { animation: pop-in 0.35s var(--spring); }
+.nav-chev svg { transition: transform 0.3s var(--ios); }
+
+/* botón + : aparece con rebote; barra de selección y avisos suben desde abajo */
+.fab { animation: pop-in 0.45s var(--spring) backwards; transition: transform 0.18s var(--ios); }
+.fab:active { transform: scale(0.9); }
+.actionbar { animation: bar-in 0.4s var(--ios) backwards; }
+.toast-bar { animation: rise 0.4s var(--ios) backwards; }
+.selbar { animation: fade-in 0.25s ease backwards; }
+.listening, .toast { animation: rise 0.35s var(--ios) backwards; }
+.sheet-wrap.closing { animation: fade-out 0.21s ease forwards; }
+.sheet-wrap.closing .sheet { animation: sheet-out 0.22s var(--ios) forwards; }
+.sheet-head { touch-action: none; }
+.update-bar { animation: rise 0.4s var(--ios) backwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.01ms !important; }
+}

@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useStore, addFolder, renameFolder, deleteFolder, moveFolder, syncNow } from '../lib/store';
 import { navigate, type Route } from '../lib/router';
 import { folderRows, withDescendants } from '../lib/folders';
 import { Icon } from './Icons';
 import { Sheet, SheetItem } from './ui';
-import { ago } from '../lib/util';
+import { ago, isBlank } from '../lib/util';
 
 const COLLAPSED_KEY = 'apunte.collapsed';
 const loadCollapsed = (): Record<string, boolean> => {
@@ -16,6 +16,7 @@ export function Sidebar({ route, open, onClose }: { route: Route; open: boolean;
   const folders = useStore((s) => s.folders);
   const sync = useStore((s) => ({ status: s.syncStatus, msg: s.syncMessage, at: s.syncAt }));
   const [collapsed, setCollapsed] = useState(loadCollapsed);
+  const swipeX = useRef<number | null>(null);
   const [menu, setMenu] = useState<{ id: string; step: 'main' | 'move' } | null>(null);
 
   const toggle = (id: string) => {
@@ -32,6 +33,7 @@ export function Sidebar({ route, open, onClose }: { route: Route; open: boolean;
     let all = 0, trash = 0;
     for (const n of Object.values(notes)) {
       if (n.trashed) { trash++; continue; }
+      if (isBlank(n)) continue;
       all++;
       if (n.folderId) direct[n.folderId] = (direct[n.folderId] ?? 0) + 1;
       for (const t of n.tags) tags[t] = (tags[t] ?? 0) + 1;
@@ -82,8 +84,12 @@ export function Sidebar({ route, open, onClose }: { route: Route; open: boolean;
 
   return (
     <>
-      {open && <div className="scrim" onClick={onClose} />}
-      <aside className={`sidebar${open ? ' open' : ''}`}>
+      <div className={`scrim${open ? ' on' : ''}`} onClick={onClose} />
+      <aside
+        className={`sidebar${open ? ' open' : ''}`}
+        onTouchStart={(e) => { swipeX.current = e.touches[0].clientX; }}
+        onTouchEnd={(e) => { if (swipeX.current !== null && e.changedTouches[0].clientX - swipeX.current < -60) onClose(); swipeX.current = null; }}
+      >
         <div className="brand">
           <div className="brand-mark"><Icon name="notes" size={17} /></div>
           <div className="brand-name">Apunte</div>

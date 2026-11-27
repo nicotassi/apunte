@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { imageURL } from '../lib/images';
 import { Icon } from './Icons';
 
@@ -10,18 +10,44 @@ export function IconBtn({ icon, label, onClick, active, size = 20, disabled }: {
   );
 }
 
-/** Panel que sube desde abajo (menús y selectores). */
+/** Panel que sube desde abajo (menús y selectores). Se cierra tocando afuera o arrastrando hacia abajo. */
 export function Sheet({ title, onClose, children }: { title?: string; onClose: () => void; children: ReactNode }) {
+  const [closing, setClosing] = useState(false);
+  const [dy, setDy] = useState(0);
+  const start = useRef<number | null>(null);
+  const closeRef = useRef(false);
+
+  const close = useCallback(() => {
+    if (closeRef.current) return;
+    closeRef.current = true;
+    setClosing(true);
+    setTimeout(onClose, 210);
+  }, [onClose]);
+
   useEffect(() => {
-    const k = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    const k = (e: KeyboardEvent) => e.key === 'Escape' && close();
     window.addEventListener('keydown', k);
     return () => window.removeEventListener('keydown', k);
-  }, [onClose]);
+  }, [close]);
+
   return (
-    <div className="sheet-wrap" onClick={onClose}>
-      <div className="sheet" role="dialog" aria-label={title} onClick={(e) => e.stopPropagation()}>
-        <div className="sheet-grab" />
-        {title && <div className="sheet-title">{title}</div>}
+    <div className={`sheet-wrap${closing ? ' closing' : ''}`} onClick={close}>
+      <div
+        className="sheet"
+        role="dialog"
+        aria-label={title}
+        style={{ ...(dy > 0 && !closing ? { transform: `translateY(${dy}px)`, transition: 'none', animation: 'none' } : {}), ['--dy' as string]: `${dy}px` }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          className="sheet-head"
+          onTouchStart={(e) => { start.current = e.touches[0].clientY; }}
+          onTouchMove={(e) => { if (start.current !== null) setDy(Math.max(0, e.touches[0].clientY - start.current)); }}
+          onTouchEnd={() => { start.current = null; if (dy > 90) close(); else setDy(0); }}
+        >
+          <div className="sheet-grab" />
+          {title && <div className="sheet-title">{title}</div>}
+        </div>
         {children}
       </div>
     </div>

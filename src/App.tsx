@@ -12,6 +12,8 @@ import type { NoteColor } from './lib/types';
 import { Icon } from './components/Icons';
 import { IconBtn, Sheet, SheetItem } from './components/ui';
 import { BODY_FONTS, TITLE_FONTS } from './lib/fonts';
+import { isBlank } from './lib/util';
+import type { Route } from './lib/router';
 
 const UI_SCALE = [0.9, 1, 1.12, 1.26];
 const TXT_SCALE = [0.9, 1, 1.18];
@@ -27,6 +29,20 @@ export default function App() {
   const [q, setQ] = useState('');
   const [searching, setSearching] = useState(false);
   const [viewSheet, setViewSheet] = useState(false);
+
+  // ---- pantalla que se desliza encima (nota o ajustes): se mantiene montada mientras se anima la salida
+  const overlayKey = route.note ? `n:${route.note}` : route.settings ? 's' : null;
+  const [shown, setShown] = useState<{ key: string; route: Route } | null>(null);
+  const [leaving, setLeaving] = useState(false);
+  useEffect(() => {
+    if (overlayKey) { setShown({ key: overlayKey, route }); setLeaving(false); return; }
+    setLeaving(true);
+    const t = setTimeout(() => { setShown(null); setLeaving(false); }, 340);
+    return () => clearTimeout(t);
+  }, [overlayKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const ovRef = useRef<HTMLDivElement>(null);
+  const swipe = useRef<{ x: number; y: number; active: boolean } | null>(null);
+  const edge = useRef<{ x: number; y: number } | null>(null);
 
   // ---- selección de varias notas
   const [selecting, setSelecting] = useState(false);
@@ -99,7 +115,7 @@ export default function App() {
     return Object.values(notes)
       .filter((n) => {
         if (route.view === 'trash') return n.trashed;
-        if (n.trashed) return false;
+        if (n.trashed || isBlank(n)) return false;
         if (inFolder && (!n.folderId || !inFolder.has(n.folderId))) return false;
         if (route.view === 'tag' && !n.tags.includes(route.arg ?? '')) return false;
         if (!needle) return true;
@@ -166,14 +182,23 @@ export default function App() {
 
   const grid = (items: typeof list) => (
     <div className={`grid-notes v-${settings.view}`}>
-      {items.map((n) => <NoteCard key={n.id} note={n} folder={n.folderId ? folders[n.folderId] : undefined} route={route} selecting={selecting} selected={selected.has(n.id)} onToggle={() => toggleSel(n.id)} onLongPress={() => (selecting ? toggleSel(n.id) : startSelecting(n.id))} />)}
+      {items.map((n, i) => <NoteCard key={n.id} note={n} folder={n.folderId ? folders[n.folderId] : undefined} route={route} index={i} selecting={selecting} selected={selected.has(n.id)} onToggle={() => toggleSel(n.id)} onLongPress={() => (selecting ? toggleSel(n.id) : startSelecting(n.id))} />)}
     </div>
   );
 
   return (
-    <div className="app">
+    <div
+      className={`app${shown && !leaving ? ' ov' : ''}`}
+      onTouchStart={(e) => { const t = e.touches[0]; edge.current = !shown && !selecting && !drawer && t.clientX < 18 ? { x: t.clientX, y: t.clientY } : null; }}
+      onTouchEnd={(e) => {
+        const o = edge.current; edge.current = null;
+        if (!o) return;
+        const t = e.changedTouches[0];
+        if (t.clientX - o.x > 60 && Math.abs(t.clientY - o.y) < 50) setDrawer(true);
+      }}
+    >
       <Sidebar route={route} open={drawer} onClose={() => setDrawer(false)} />
-      <main className="main">
+      <main className="main" key={`${route.view}:${route.arg ?? ''}`}>
         {updateAvailable && (
           <button className="update-bar" onClick={applyUpdate} type="button">Hay una versión nueva · tocá para actualizar</button>
         )}
@@ -269,10 +294,36 @@ export default function App() {
         </Sheet>
       )}
 
-      {route.note && <Editor key={route.note} id={route.note} route={route} />}
-      {route.settings && <Settings route={route} />}
+      {shown && (
+        <div
+          ref={ovRef}
+          className={`overlay${leaving ? ' leaving' : ''}`}
+          onTouchStart={(e) => { const t = e.touches[0]; swipe.current = t.clientX < 24 ? { x: t.clientX, y: t.clientY, active: false } : null; }}
+          onTouchMove={(e) => {
+            const sw = swipe.current; const el = ovRef.current;
+            if (!sw || !el) return;
+            const t = e.touches[0]; const dx = t.clientX - sw.x; const dy = t.clientY - sw.y;
+            if (!sw.active) {
+              if (dx > 10 && dx > Math.abs(dy) * 1.5) sw.active = true;
+              else if (Math.abs(dy) > 10) { swipe.current = null; return; }
+            }
+            if (sw.active) { el.style.transition = 'none'; el.style.transform = `translateX(${Math.max(0, dx)}px)`; }
+          }}
+          onTouchEnd={(e) => {
+            const sw = swipe.current; const el = ovRef.current;
+            swipe.current = null;
+            if (!sw || !sw.active || !el) return;
+            const dx = e.changedTouches[0].clientX - sw.x;
+            el.style.transition = '';
+            if (dx > 100) { el.style.setProperty('--dx', `${dx}px`); el.style.transform = ''; closeOverlay(shown.route); }
+            else el.style.transform = '';
+          }}
+        >
+          {shown.route.note ? <Editor key={shown.route.note} id={shown.route.note} route={shown.route} /> : <Settings route={shown.route} />}
+        </div>
+      )}
       {/* si el id de la nota no existe (enlace viejo) se cierra */}
-      {route.note && !notes[route.note] && <Closer route={route} />}
+      {route.note && !notes[route.note] && !leaving && <Closer route={route} />}
     </div>
   );
 }

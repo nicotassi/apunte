@@ -13,9 +13,10 @@ interface Props {
   selected: boolean;
   onToggle: () => void; // tocar mientras se está seleccionando
   onLongPress: () => void; // mantener apretado: empieza la selección
+  index?: number; // orden en la lista (para la animación de entrada)
 }
 
-export function NoteCard({ note, folder, route, selecting, selected, onToggle, onLongPress }: Props) {
+export function NoteCard({ note, folder, route, selecting, selected, onToggle, onLongPress, index = 0 }: Props) {
   const preview = useMemo(() => plainText(note.body).slice(0, 700), [note.body]);
   const img = useMemo(() => firstImage(note.body), [note.body]);
   const showFolder = folder && !(route.view === 'folder' && route.arg === folder.id);
@@ -29,6 +30,7 @@ export function NoteCard({ note, folder, route, selecting, selected, onToggle, o
     <button
       className={`card${note.color ? ` c-${note.color}` : ''}${selected ? ' sel' : ''}${selecting ? ' selecting' : ''}`}
       type="button"
+      style={{ ['--i' as string]: Math.min(index, 10) }}
       onPointerDown={(e) => {
         fired.current = false;
         origin.current = { x: e.clientX, y: e.clientY };

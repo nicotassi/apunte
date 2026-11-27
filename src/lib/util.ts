@@ -56,3 +56,6 @@ export function download(name: string, blob: Blob) {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
+
+/** Una nota recién creada que todavía no tiene nada escrito (no se muestra ni se sincroniza). */
+export const isBlank = (n: { title: string; body: string; trashed?: boolean }) => !n.trashed && !n.title.trim() && !n.body.trim();
