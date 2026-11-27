@@ -1,5 +1,6 @@
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import { stripWikiLinks, wikiHtml } from './wikilinks';
 
 marked.setOptions({ gfm: true, breaks: true });
 
@@ -19,12 +20,12 @@ export function renderMd(src: string): string {
     ADD_TAGS: ['input'],
     ADD_ATTR: ['checked', 'type', 'target'],
   });
-  return clean.replace(/<img src="assets\/([^"]+)"/g, `<img data-asset="$1" src="${BLANK}"`);
+  return wikiHtml(clean).replace(/<img src="assets\/([^"]+)"/g, `<img data-asset="$1" src="${BLANK}"`);
 }
 
 /** Texto plano para las vistas previas de las tarjetas. */
 export function plainText(md: string): string {
-  return md
+  return stripWikiLinks(md)
     .replace(/```[\w+-]*\n?/g, '')
     .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')

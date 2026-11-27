@@ -427,3 +427,16 @@ code { background: var(--bg-2); padding: 0.05rem 0.35rem; border-radius: 0.35rem
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* ---------- Enlaces entre notas ---------- */
+.cm-wikilink { color: var(--accent); background: var(--accent-soft); border-radius: 0.35em; padding: 0.05em 0.3em; cursor: pointer; border-bottom: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); }
+.cm-wiki-missing { background: transparent; border-bottom-style: dashed; opacity: 0.8; }
+.cm-wiki-raw { cursor: text; border-bottom: 0; }
+.backlinks { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0.4rem 0 0.2rem; padding-top: 0.9rem; border-top: 1px solid var(--line); }
+.backlinks-label { width: 100%; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); font-weight: 600; }
+.backlinks .chip { padding: 0.3rem 0.75rem; font-size: 0.8rem; background: var(--accent-soft); color: var(--accent); }
+.wikilink { color: var(--accent); }
+.cm-tooltip.cm-tooltip-autocomplete { border: 1px solid var(--line) !important; background: var(--surface) !important; border-radius: 0.9rem; box-shadow: var(--shadow-lg); overflow: hidden; animation: rise 0.2s var(--ios) backwards; }
+.cm-tooltip.cm-tooltip-autocomplete > ul { font-family: var(--sans) !important; max-height: 15rem; }
+.cm-tooltip.cm-tooltip-autocomplete > ul > li { padding: 0.65rem 0.9rem !important; font-size: 0.92rem; color: var(--ink); }
+.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] { background: var(--accent-soft) !important; color: var(--ink) !important; }

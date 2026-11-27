@@ -5,6 +5,9 @@ import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { livePreview, tablePreview } from '../lib/livepreview';
 import { pastedMarkdown } from '../lib/paste';
+import { autocompletion, type Completion, type CompletionContext } from '@codemirror/autocomplete';
+import { useStore } from '../lib/store';
+import { candidates, cleanTitle, normTitle } from '../lib/wikilinks';
 
 interface Props {
   value: string;
@@ -13,14 +16,34 @@ interface Props {
   autoFocus?: boolean;
   onPasteImages: (files: File[]) => void;
   onReady: (view: EditorView) => void;
+  noteId: string; // para no sugerir la misma nota
+  onOpenLink: (target: string) => void;
+}
+
+/** Sugerencias de notas al escribir [[ */
+function wikiSource(getNoteId: () => string) {
+  return (ctx: CompletionContext) => {
+    const m = ctx.matchBefore(/\[\[[^\]\n|]*/);
+    if (!m) return null;
+    const q = m.text.slice(2);
+    const found = candidates(q, useStore.getState().notes, getNoteId());
+    const insert = (title: string) => (view: EditorView, _c: Completion, from: number, to: number) => {
+      const closes = view.state.sliceDoc(to, to + 2) === ']]' ? 2 : 0; // si ya estaban los corchetes de cierre, no se duplican
+      const text = `${cleanTitle(title)}]]`;
+      view.dispatch({ changes: { from, to: to + closes, insert: text }, selection: { anchor: from + text.length }, userEvent: 'input.complete' });
+    };
+    const options: Completion[] = found.map((n) => ({ label: n.title, apply: insert(n.title), type: 'text' }));
+    if (q.trim() && !found.some((n) => normTitle(n.title) === normTitle(q))) options.push({ label: `Crear «${cleanTitle(q)}»`, apply: insert(q), type: 'text' });
+    return options.length ? { from: m.from + 2, options, filter: false } : null;
+  };
 }
 
 /** Editor Markdown con vista previa en vivo: se escribe y se ve con formato al mismo tiempo. */
-export function LiveEditor({ value, onChange, readOnly, autoFocus, onPasteImages, onReady }: Props) {
+export function LiveEditor({ value, onChange, readOnly, autoFocus, onPasteImages, onReady, noteId, onOpenLink }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
-  const cb = useRef({ onChange, onPasteImages });
-  cb.current = { onChange, onPasteImages };
+  const cb = useRef({ onChange, onPasteImages, onOpenLink, noteId });
+  cb.current = { onChange, onPasteImages, onOpenLink, noteId };
 
   useEffect(() => {
     const view = new EditorView({
@@ -46,11 +69,21 @@ export function LiveEditor({ value, onChange, readOnly, autoFocus, onPasteImages
           placeholder('Escribí algo… (acepta Markdown)'),
           livePreview,
           tablePreview,
+          // Al escribir [[ aparecen las notas para enlazar
+          autocompletion({ override: [wikiSource(() => cb.current.noteId)], icons: false, maxRenderedOptions: 8 }),
           EditorState.readOnly.of(!!readOnly),
           EditorView.editable.of(!readOnly),
           EditorView.contentAttributes.of({ spellcheck: 'true', autocapitalize: 'sentences', autocorrect: 'on' }),
           EditorView.updateListener.of((u) => { if (u.docChanged) cb.current.onChange(u.state.doc.toString()); }),
           EditorView.domEventHandlers({
+            // tocar un enlace entre notas lo abre (para editarlo, ubicá el cursor al lado y usá las flechas)
+            mousedown(e) {
+              const el = (e.target as HTMLElement).closest?.('.cm-wikilink[data-wiki]');
+              if (!el) return false;
+              e.preventDefault();
+              cb.current.onOpenLink(el.getAttribute('data-wiki') ?? '');
+              return true;
+            },
             paste(e, v) {
               const data = e.clipboardData;
               if (!data) return false;

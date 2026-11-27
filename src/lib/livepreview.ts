@@ -3,6 +3,8 @@ import { type EditorState, type Range, StateEffect, StateField } from '@codemirr
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 import { imageURL } from './images';
 import { renderMd } from './md';
+import { findNote, WIKI_RE } from './wikilinks';
+import { useStore } from './store';
 
 /**
  * Vista previa en vivo (como Obsidian): el texto se ve con su formato mientras se escribe.
@@ -101,6 +103,8 @@ function build(view: EditorView): DecorationSet {
             return;
           }
           case 'Link': {
+            // [[Nota]] se ve como un enlace de Markdown ([Nota] entre corchetes); ese caso lo maneja el bloque de enlaces entre notas
+            if (state.sliceDoc(node.from - 1, node.from) === '[' && state.sliceDoc(node.to, node.to + 1) === ']') return;
             const marks = node.node.getChildren('LinkMark');
             if (marks.length >= 2) {
               out.push(cls('cm-link').range(marks[0].to, marks[1].from));
@@ -154,6 +158,27 @@ function build(view: EditorView): DecorationSet {
         }
       },
     });
+  }
+
+  // Enlaces entre notas: [[Título]] y [[Título|texto]]
+  const tree = syntaxTree(state);
+  const inCode = (pos: number) => {
+    for (let n: { name: string; parent: unknown } | null = tree.resolveInner(pos, 1); n; n = n.parent as typeof n) if (/^(InlineCode|FencedCode|CodeBlock|CodeText)$/.test(n.name)) return true;
+    return false;
+  };
+  const notes = useStore.getState().notes;
+  for (const vr of view.visibleRanges) {
+    for (const m of state.sliceDoc(vr.from, vr.to).matchAll(WIKI_RE)) {
+      const from = vr.from + m.index!;
+      const to = from + m[0].length;
+      if (inCode(from)) continue;
+      if (touches(from, to)) { out.push(cls('cm-wikilink cm-wiki-raw').range(from, to)); continue; }
+      const target = m[1];
+      const label = m[2] ?? target;
+      const labelFrom = from + 2 + (m[2] !== undefined ? target.length + 1 : 0);
+      out.push(hide.range(from, labelFrom), hide.range(labelFrom + label.length, to));
+      out.push(Decoration.mark({ class: `cm-wikilink${findNote(target, notes) ? '' : ' cm-wiki-missing'}`, attributes: { 'data-wiki': target } }).range(labelFrom, labelFrom + label.length));
+    }
   }
   return Decoration.set(out, true);
 }

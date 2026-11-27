@@ -3,6 +3,7 @@
 Notas simples, rápidas y sin fricción. Pensada para el celular (PWA instalable y offline), con la calma de Google Keep y algunas cosas más:
 
 - **Carpetas** (que se pueden anidar: subcarpetas, mover, renombrar) y **tags**.
+- **Enlaces entre notas** con `[[`: elegís la nota de una lista, se tocan para abrirlas, avisa en qué otras notas está mencionada, y si renombrás una nota los enlaces se actualizan solos.
 - **Seleccionar varias notas** (mantené apretada una, o el botón de arriba) para mover, duplicar, cambiar color o eliminar, con aviso para deshacer.
 - **Colores** para las notas (8 colores suaves, se ven en la tarjeta y en el editor).
 - **Tres vistas** de la lista: grilla, lista compacta y grande.

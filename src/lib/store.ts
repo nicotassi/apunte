@@ -3,6 +3,7 @@ import * as db from './db';
 import { DEFAULT_SETTINGS, type Folder, type Note, type Settings, type SyncState } from './types';
 import { debounce, nid, normTag } from './util';
 import { withDescendants } from './folders';
+import { normTitle, renameLinksInBody } from './wikilinks';
 import { GitHubRemote, parseRepo, runSync, SyncError, type SyncIO } from './sync';
 import { getImageBytes, imageNames, putImageBytes } from './images';
 
@@ -115,6 +116,20 @@ export function duplicateNotes(ids: string[]): string[] {
   }
   scheduleSync();
   return out;
+}
+
+/** Si se le cambia el título a una nota, los [[enlaces]] que apuntaban a ella en otras notas se actualizan. */
+export function renameLinks(oldTitle: string, newTitle: string, exceptId: string) {
+  const o = normTitle(oldTitle);
+  if (!o || !normTitle(newTitle) || o === normTitle(newTitle)) return;
+  const all = Object.values(get().notes);
+  // si otra nota sigue con el título viejo, esos enlaces siguen siendo válidos
+  if (all.some((n) => n.id !== exceptId && !n.trashed && normTitle(n.title) === o)) return;
+  for (const n of all) {
+    if (n.id === exceptId || n.trashed) continue;
+    const body = renameLinksInBody(n.body, oldTitle, newTitle);
+    if (body !== n.body) updateNote(n.id, { body });
+  }
 }
 
 export function deleteForever(id: string) {

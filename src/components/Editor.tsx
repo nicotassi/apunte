@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { redo, undo } from '@codemirror/commands';
 import type { EditorView } from '@codemirror/view';
-import { useStore, updateNote, deleteForever, dropIfEmpty } from '../lib/store';
-import { closeOverlay, type Route } from '../lib/router';
+import { startCompletion } from '@codemirror/autocomplete';
+import { useStore, updateNote, deleteForever, dropIfEmpty, newNote, renameLinks } from '../lib/store';
+import { closeOverlay, navigate, type Route } from '../lib/router';
+import { backlinks, cleanTitle, findNote } from '../lib/wikilinks';
 import { hasRichFormat, htmlToMarkdown } from '../lib/paste';
 import { addImage } from '../lib/images';
 import { exportPdf } from '../lib/pdf';
@@ -49,7 +51,15 @@ export function Editor({ id, route }: { id: string; route: Route }) {
     const t = setTimeout(flush, 300);
     return () => clearTimeout(t);
   }, [title, body, flush]);
-  useEffect(() => () => { stopDictation.current?.(); flush(); dropIfEmpty(id); }, [id, flush]);
+  // Al salir de la nota, si le cambiaste el título, los [[enlaces]] de otras notas que apuntaban a ella se actualizan.
+  const initialTitle = useRef(note?.title ?? '');
+  useEffect(() => () => {
+    stopDictation.current?.();
+    flush();
+    const now = useStore.getState().notes[id]?.title ?? '';
+    if (initialTitle.current.trim() && now.trim() && now !== initialTitle.current) renameLinks(initialTitle.current, now, id);
+    dropIfEmpty(id);
+  }, [id, flush]);
 
   // Si la nota cambió desde afuera (sincronización) y no hay ediciones pendientes, se refleja.
   useEffect(() => {
@@ -74,6 +84,18 @@ export function Editor({ id, route }: { id: string; route: Route }) {
 
   const say = (m: string) => { setToast(m); setTimeout(() => setToast(''), 2200); };
   const close = () => { flush(); closeOverlay(route); };
+
+  /** Abre la nota a la que apunta un [[enlace]]; si no existe, ofrece crearla. */
+  const openLink = (target: string) => {
+    flush();
+    const hit = findNote(target, useStore.getState().notes);
+    if (hit) { navigate({ view: route.view, arg: route.arg, note: hit.id }); return; }
+    const title = cleanTitle(target);
+    if (title && confirm(`No existe una nota llamada «${title}». ¿Crearla?`)) {
+      const nid = newNote({ title, folderId: note?.folderId ?? null });
+      navigate({ view: route.view, arg: route.arg, note: nid });
+    }
+  };
 
   const edit = (next: string) => {
     dirty.current = true;
@@ -181,6 +203,8 @@ export function Editor({ id, route }: { id: string; route: Route }) {
     setTagText('');
   };
 
+  const mentions = useMemo(() => (note ? backlinks({ ...note, title }, allNotes) : []), [note, title, allNotes]);
+
   if (!note) return null;
   const folder = note.folderId ? folders[note.folderId] : null;
   const words = body.trim() ? body.trim().split(/\s+/).length : 0;
@@ -259,7 +283,18 @@ export function Editor({ id, route }: { id: string; route: Route }) {
             onChange={edit}
             onPasteImages={(f) => void addImages(f)}
             onReady={(v) => { viewRef.current = v; }}
+            noteId={id}
+            onOpenLink={openLink}
           />
+
+          {mentions.length > 0 && (
+            <div className="backlinks">
+              <div className="backlinks-label">Mencionada en</div>
+              {mentions.map((n) => (
+                <button key={n.id} className="chip btn" onClick={() => { flush(); navigate({ view: route.view, arg: route.arg, note: n.id }); }} type="button"><Icon name="notelink" size={12} />{n.title || 'Sin título'}</button>
+              ))}
+            </div>
+          )}
 
           <div className="ed-foot muted tiny">
             {words} {words === 1 ? 'palabra' : 'palabras'} · editada {ago(note.updatedAt)}
@@ -279,6 +314,7 @@ export function Editor({ id, route }: { id: string; route: Route }) {
             <button onClick={() => linePrefix('> ')} aria-label="Cita" type="button"><Icon name="quote" /></button>
             <button onClick={() => wrap('`')} aria-label="Código" type="button"><Icon name="code" /></button>
             <button onClick={() => { const v = viewRef.current; if (!v) return; const { from, to } = v.state.selection.main; const t = v.state.sliceDoc(from, to) || 'texto'; v.dispatch({ changes: { from, to, insert: `[${t}](https://)` }, selection: { anchor: from + t.length + 3, head: from + t.length + 11 } }); v.focus(); }} aria-label="Enlace" type="button"><Icon name="link" /></button>
+            <button onClick={() => { const v = viewRef.current; if (!v) return; insertText('[['); startCompletion(v); }} aria-label="Enlace a otra nota" type="button"><Icon name="notelink" /></button>
             <button onClick={insertTable} aria-label="Insertar tabla" type="button"><Icon name="table" /></button>
             <button onClick={() => fileRef.current?.click()} aria-label="Insertar imagen" type="button"><Icon name="image" /></button>
             <button onClick={() => void pasteFromClipboard()} aria-label="Pegar con formato" type="button"><Icon name="clipboard" /></button>
