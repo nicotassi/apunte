@@ -7,6 +7,9 @@ import { addImage } from '../lib/images';
 import { exportPdf } from '../lib/pdf';
 import { downloadNoteMd } from '../lib/io';
 import { ago, normTag } from '../lib/util';
+import { folderRows } from '../lib/folders';
+import { dictationSupported, formatDictation, startDictation } from '../lib/dictation';
+import { NOTE_COLORS } from '../lib/types';
 import { Icon } from './Icons';
 import { IconBtn, Sheet, SheetItem } from './ui';
 import { LiveEditor } from './LiveEditor';
@@ -18,9 +21,12 @@ export function Editor({ id, route }: { id: string; route: Route }) {
 
   const [title, setTitle] = useState(note?.title ?? '');
   const [body, setBody] = useState(note?.body ?? '');
-  const [sheet, setSheet] = useState<null | 'more' | 'folder'>(null);
+  const [sheet, setSheet] = useState<null | 'more' | 'folder' | 'color'>(null);
   const [tagText, setTagText] = useState('');
   const [toast, setToast] = useState('');
+  const [listening, setListening] = useState(false);
+  const [interim, setInterim] = useState('');
+  const stopDictation = useRef<(() => void) | null>(null);
 
   const viewRef = useRef<EditorView | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -42,7 +48,7 @@ export function Editor({ id, route }: { id: string; route: Route }) {
     const t = setTimeout(flush, 300);
     return () => clearTimeout(t);
   }, [title, body, flush]);
-  useEffect(() => () => { flush(); dropIfEmpty(id); }, [id, flush]);
+  useEffect(() => () => { stopDictation.current?.(); flush(); dropIfEmpty(id); }, [id, flush]);
 
   // Si la nota cambió desde afuera (sincronización) y no hay ediciones pendientes, se refleja.
   useEffect(() => {
@@ -96,6 +102,25 @@ export function Editor({ id, route }: { id: string; route: Route }) {
     if (!v) return;
     v.dispatch(v.state.replaceSelection(text), { scrollIntoView: true });
     v.focus();
+  };
+  const toggleDictation = () => {
+    if (listening) { stopDictation.current?.(); return; }
+    if (!dictationSupported()) { say('Este navegador no tiene dictado. Usá el micrófono del teclado.'); return; }
+    const v = viewRef.current;
+    v?.focus();
+    setListening(true);
+    stopDictation.current = startDictation({
+      onFinal: (t) => {
+        const view = viewRef.current;
+        if (!view) return;
+        const pos = view.state.selection.main.from;
+        const out = formatDictation(t, view.state.sliceDoc(Math.max(0, pos - 3), pos));
+        if (out) view.dispatch(view.state.replaceSelection(out), { scrollIntoView: true, userEvent: 'input.type' });
+      },
+      onInterim: setInterim,
+      onEnd: () => { setListening(false); setInterim(''); stopDictation.current = null; },
+      onError: say,
+    });
   };
   const insertTable = () => {
     const v = viewRef.current;
@@ -157,11 +182,12 @@ export function Editor({ id, route }: { id: string; route: Route }) {
   };
 
   return (
-    <div className="editor-wrap">
+    <div className={`editor-wrap${note.color ? ` c-${note.color}` : ''}`}>
       <div className="editor">
         <header className="ed-head">
           <IconBtn icon="back" label="Volver" onClick={close} />
           <div className="grow" />
+          {!readOnly && <IconBtn icon="palette" label="Color de la nota" active={!!note.color} onClick={() => setSheet('color')} />}
           {!readOnly && <IconBtn icon="pin" label={note.pinned ? 'Desfijar' : 'Fijar'} active={note.pinned} onClick={() => updateNote(id, { pinned: !note.pinned })} />}
           <IconBtn icon="more" label="Más opciones" onClick={() => setSheet('more')} />
         </header>
@@ -225,6 +251,7 @@ export function Editor({ id, route }: { id: string; route: Route }) {
 
         {!readOnly && (
           <div className="toolbar" onMouseDown={(e) => e.preventDefault()}>
+            <button className={listening ? 'rec' : ''} onClick={toggleDictation} aria-label={listening ? 'Parar dictado' : 'Dictar por voz'} type="button"><Icon name="mic" /></button>
             <button onClick={() => wrap('**')} aria-label="Negrita" type="button"><Icon name="bold" /></button>
             <button onClick={() => wrap('*')} aria-label="Cursiva" type="button"><Icon name="italic" /></button>
             <button onClick={() => linePrefix('## ')} aria-label="Título" type="button"><Icon name="heading" /></button>
@@ -239,6 +266,7 @@ export function Editor({ id, route }: { id: string; route: Route }) {
           </div>
         )}
         <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => { const f = [...(e.target.files ?? [])]; e.target.value = ''; if (f.length) void addImages(f); }} />
+        {listening && <div className="listening"><span className="rec-dot" />{interim || 'Escuchando… hablá'}</div>}
         {toast && <div className="toast">{toast}</div>}
       </div>
 
@@ -251,11 +279,21 @@ export function Editor({ id, route }: { id: string; route: Route }) {
           {!readOnly && <SheetItem icon="trash" label="Mover a la papelera" danger onClick={trash} />}
         </Sheet>
       )}
+      {sheet === 'color' && (
+        <Sheet title="Color de la nota" onClose={() => setSheet(null)}>
+          <div className="swatches">
+            <button className={`swatch none${!note.color ? ' on' : ''}`} onClick={() => { updateNote(id, { color: null }); setSheet(null); }} aria-label="Sin color" type="button">∅</button>
+            {NOTE_COLORS.map((c) => (
+              <button key={c} className={`swatch c-${c}${note.color === c ? ' on' : ''}`} onClick={() => { updateNote(id, { color: c }); setSheet(null); }} aria-label={c} type="button" />
+            ))}
+          </div>
+        </Sheet>
+      )}
       {sheet === 'folder' && (
         <Sheet title="Carpeta" onClose={() => setSheet(null)}>
           <SheetItem icon="notes" label="Sin carpeta" sub={!note.folderId ? '✓' : undefined} onClick={() => { updateNote(id, { folderId: null }); setSheet(null); }} />
-          {Object.values(folders).sort((a, b) => a.name.localeCompare(b.name, 'es')).map((f) => (
-            <SheetItem key={f.id} icon="folder" label={f.name} sub={note.folderId === f.id ? '✓' : undefined} onClick={() => { updateNote(id, { folderId: f.id }); setSheet(null); }} />
+          {folderRows(folders).map((r) => (
+            <SheetItem key={r.folder.id} icon="folder" label={r.path} sub={note.folderId === r.folder.id ? '✓' : undefined} onClick={() => { updateNote(id, { folderId: r.folder.id }); setSheet(null); }} />
           ))}
           <SheetItem icon="plus" label="Nueva carpeta…" onClick={() => { const n = window.prompt('Nombre de la carpeta'); const fid = n ? addFolder(n) : null; if (fid) updateNote(id, { folderId: fid }); setSheet(null); }} />
         </Sheet>

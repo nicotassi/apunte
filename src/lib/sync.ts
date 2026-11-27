@@ -1,6 +1,7 @@
 import type { Folder, Note, SyncState } from './types';
 import { parseNote, serializeNote } from './frontmatter';
 import { nid, safeName, slug } from './util';
+import { folderPath } from './folders';
 
 /* ───────────── Cliente mínimo de Git (REST de GitHub) ───────────── */
 
@@ -147,13 +148,13 @@ export interface SyncIO {
 
 export interface SyncResult { pulled: number; pushed: number; removed: number; conflicts: number }
 
-const NOTE_RE = /^notes\/(?:([^/]+)\/)?[^/]*?-?([a-z0-9]{10})\.md$/;
+const NOTE_RE = /^notes\/(?:(.+)\/)?[^/]*?-?([a-z0-9]{10})\.md$/;
 const ASSET_RE = /^assets\/([^/]+)$/;
 
 export function notePath(n: Note, folders: Folder[]): string {
-  const f = n.folderId ? folders.find((x) => x.id === n.folderId) : null;
+  const dir = folderPath(n.folderId, folders).split('/').filter(Boolean).map(safeName).join('/');
   const file = `${slug(n.title) || 'nota'}-${n.id}.md`;
-  return f ? `notes/${safeName(f.name)}/${file}` : `notes/${file}`;
+  return dir ? `notes/${dir}/${file}` : `notes/${file}`;
 }
 
 export function referencedImages(notes: Note[]): Set<string> {
@@ -165,7 +166,7 @@ export function referencedImages(notes: Note[]): Set<string> {
 const dec = (b: Uint8Array) => new TextDecoder().decode(b);
 const sameContent = (a: Note, b: Note) =>
   a.title === b.title && a.body === b.body && a.pinned === b.pinned && a.trashed === b.trashed &&
-  a.folderId === b.folderId && a.tags.join(',') === b.tags.join(',');
+  a.folderId === b.folderId && a.tags.join(',') === b.tags.join(',') && (a.color ?? null) === (b.color ?? null);
 
 export async function runSync(remote: GitRemote, io: SyncIO, attempt = 0): Promise<SyncResult> {
   let head = await remote.head();
@@ -189,15 +190,20 @@ export async function runSync(remote: GitRemote, io: SyncIO, attempt = 0): Promi
   const state: SyncState = { files: { ...io.state().files }, lastAt: Date.now() };
   const byId = new Map(localNotes.map((n) => [n.id, n]));
 
-  const folderByName = (name: string | null): string | null => {
-    if (!name) return null;
-    let f = folders.find((x) => x.name.toLowerCase() === name.toLowerCase());
-    if (!f) {
-      f = { id: nid(), name, createdAt: Date.now() };
-      folders.push(f);
-      newFolders.push(f);
+  // "Trabajo/Proyectos" → crea las carpetas que falten, de arriba hacia abajo.
+  const folderByName = (path: string | null): string | null => {
+    if (!path) return null;
+    let parent: string | null = null;
+    for (const name of path.split('/').map((x) => x.trim()).filter(Boolean)) {
+      let f = folders.find((x) => x.name.toLowerCase() === name.toLowerCase() && (x.parentId ?? null) === parent);
+      if (!f) {
+        f = { id: nid(), name, parentId: parent, createdAt: Date.now() };
+        folders.push(f);
+        newFolders.push(f);
+      }
+      parent = f.id;
     }
-    return f.id;
+    return parent;
   };
   const newFolders: Folder[] = [];
 
@@ -213,6 +219,7 @@ export async function runSync(remote: GitRemote, io: SyncIO, attempt = 0): Promi
       tags: p.tags,
       pinned: p.pinned,
       trashed: p.trashed,
+      color: p.color,
       createdAt: p.createdAt,
       updatedAt: p.updatedAt,
     };
@@ -321,7 +328,7 @@ export async function runSync(remote: GitRemote, io: SyncIO, attempt = 0): Promi
     const path = notePath(note, allFolders);
     const old = remoteNotes.get(note.id);
     if (old && old.path !== path) changes.push({ path: old.path, remove: true });
-    const folder = note.folderId ? allFolders.find((f) => f.id === note.folderId)?.name ?? null : null;
+    const folder = folderPath(note.folderId, allFolders) || null;
     changes.push({ path, text: serializeNote(note, folder) });
     pushed.push(note);
   }

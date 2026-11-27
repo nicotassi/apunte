@@ -1,4 +1,4 @@
-import type { Note } from './types';
+import { NOTE_COLORS, type Note, type NoteColor } from './types';
 
 /**
  * Formato de cada nota en GitHub: un `.md` con encabezado YAML (cada valor es JSON, que también es YAML válido).
@@ -6,9 +6,10 @@ import type { Note } from './types';
  *   ---
  *   id: "k3j9x0abcd"
  *   title: "Mi nota"
- *   folder: "Trabajo"
+ *   folder: "Trabajo/Proyectos"   (carpetas anidadas separadas con /)
  *   tags: ["ideas","urgente"]
  *   pinned: true
+ *   color: "azul"
  *   created: "2026-01-01T10:00:00.000Z"
  *   updated: "2026-01-02T10:00:00.000Z"
  *   ---
@@ -20,6 +21,7 @@ export function serializeNote(n: Note, folderName: string | null): string {
   if (n.tags.length) lines.push(`tags: ${JSON.stringify(n.tags)}`);
   if (n.pinned) lines.push('pinned: true');
   if (n.trashed) lines.push('trashed: true');
+  if (n.color) lines.push(`color: ${JSON.stringify(n.color)}`);
   lines.push(`created: ${JSON.stringify(new Date(n.createdAt).toISOString())}`);
   lines.push(`updated: ${JSON.stringify(new Date(n.updatedAt).toISOString())}`);
   lines.push('---', '');
@@ -33,6 +35,7 @@ export interface ParsedNote {
   tags: string[];
   pinned: boolean;
   trashed: boolean;
+  color: NoteColor | null;
   createdAt: number;
   updatedAt: number;
   body: string;
@@ -67,6 +70,7 @@ export function parseNote(text: string): ParsedNote | null {
     tags: Array.isArray(meta.tags) ? meta.tags.filter((t): t is string => typeof t === 'string') : [],
     pinned: meta.pinned === true,
     trashed: meta.trashed === true,
+    color: NOTE_COLORS.includes(meta.color as NoteColor) ? (meta.color as NoteColor) : null,
     createdAt: time(meta.created),
     updatedAt: time(meta.updated),
     body,

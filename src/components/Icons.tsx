@@ -30,6 +30,15 @@ const P: Record<string, ReactNode> = {
   restore: <path d="M4 12a8 8 0 1 0 3-6.2M4 4v4h4" />,
   copy: <><rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></>,
   table: <><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="M3 10h18M3 14.5h18M9.5 5v14M15 5v14" /></>,
+  mic: <><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" /></>,
+  palette: <><path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-.9 2-1.8 0-1.3-1-1.6-1-2.7 0-1 .8-1.5 1.8-1.5H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8Z" /><circle cx="7.5" cy="11" r="1" /><circle cx="10" cy="7" r="1" /><circle cx="15" cy="7" r="1" /></>,
+  grid: <><rect x="4" y="4" width="7" height="9" rx="2" /><rect x="13" y="4" width="7" height="5" rx="2" /><rect x="4" y="15" width="7" height="5" rx="2" /><rect x="13" y="11" width="7" height="9" rx="2" /></>,
+  rows: <path d="M4 6h16M4 12h16M4 18h16" />,
+  large: <><rect x="4" y="4" width="16" height="7" rx="2" /><rect x="4" y="13" width="16" height="7" rx="2" /></>,
+  chevron: <path d="m9 6 6 6-6 6" />,
+  subfolder: <><path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6Z" /><path d="M12 10v5M9.5 12.5h5" /></>,
+  move: <path d="M5 12h14m0 0-4-4m4 4-4 4" />,
+  edit2: <path d="M4 20h4L19 9l-4-4L4 16v4Z" />,
   notes: <><rect x="4" y="4" width="16" height="16" rx="3" /><path d="M8 9h8M8 13h8M8 17h4" /></>,
 };
 

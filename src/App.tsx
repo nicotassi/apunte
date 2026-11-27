@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useStore, initStore, newNote, emptyTrash } from './lib/store';
+import { useStore, initStore, newNote, emptyTrash, setSettings } from './lib/store';
+import { folderChain, withDescendants } from './lib/folders';
 import { closeOverlay, navigate, useRoute } from './lib/router';
 import { applyUpdate, checkForUpdate, useUpdate } from './lib/update';
 import { Sidebar } from './components/Sidebar';
@@ -7,7 +8,7 @@ import { NoteCard } from './components/NoteCard';
 import { Editor } from './components/Editor';
 import { Settings } from './components/Settings';
 import { Icon } from './components/Icons';
-import { IconBtn } from './components/ui';
+import { IconBtn, Sheet, SheetItem } from './components/ui';
 import { TITLE_FONTS } from './lib/fonts';
 
 const UI_SCALE = [0.9, 1, 1.12, 1.26];
@@ -23,6 +24,7 @@ export default function App() {
   const [drawer, setDrawer] = useState(false);
   const [q, setQ] = useState('');
   const [searching, setSearching] = useState(false);
+  const [viewSheet, setViewSheet] = useState(false);
 
   useEffect(() => {
     void initStore().then(() => {
@@ -57,11 +59,13 @@ export default function App() {
 
   const list = useMemo(() => {
     const needle = q.trim().toLowerCase();
+    // una carpeta muestra también lo que tienen sus subcarpetas
+    const inFolder = route.view === 'folder' && route.arg ? withDescendants(route.arg, folders) : null;
     return Object.values(notes)
       .filter((n) => {
         if (route.view === 'trash') return n.trashed;
         if (n.trashed) return false;
-        if (route.view === 'folder' && n.folderId !== route.arg) return false;
+        if (inFolder && (!n.folderId || !inFolder.has(n.folderId))) return false;
         if (route.view === 'tag' && !n.tags.includes(route.arg ?? '')) return false;
         if (!needle) return true;
         const fname = n.folderId ? folders[n.folderId]?.name ?? '' : '';
@@ -76,7 +80,9 @@ export default function App() {
   const others = list.filter((n) => !n.pinned);
   const folder = route.view === 'folder' && route.arg ? folders[route.arg] : undefined;
   const title = route.view === 'folder' ? folder?.name ?? 'Carpeta' : route.view === 'tag' ? `#${route.arg}` : route.view === 'trash' ? 'Papelera' : 'Notas';
-  const eyebrow = route.view === 'folder' ? 'Carpeta' : route.view === 'tag' ? 'Tag' : route.view === 'trash' ? 'Se borran solo si las eliminás' : `${list.length} ${list.length === 1 ? 'nota' : 'notas'}`;
+  const parents = route.view === 'folder' ? folderChain(route.arg, folders).slice(0, -1).map((f) => f.name).join(' / ') : '';
+  const subfolders = route.view === 'folder' ? Object.values(folders).filter((f) => f.parentId === route.arg).sort((a, b) => a.name.localeCompare(b.name, 'es')) : [];
+  const eyebrow = route.view === 'folder' ? (parents || 'Carpeta') : route.view === 'tag' ? 'Tag' : route.view === 'trash' ? 'Se borran solo si las eliminás' : `${list.length} ${list.length === 1 ? 'nota' : 'notas'}`;
 
   const create = () => {
     const id = newNote({ folderId: route.view === 'folder' ? route.arg ?? null : null, tags: route.view === 'tag' && route.arg ? [route.arg] : [] });
@@ -84,7 +90,7 @@ export default function App() {
   };
 
   const grid = (items: typeof list) => (
-    <div className="grid-notes">
+    <div className={`grid-notes v-${settings.view}`}>
       {items.map((n) => <NoteCard key={n.id} note={n} folder={n.folderId ? folders[n.folderId] : undefined} route={route} />)}
     </div>
   );
@@ -100,6 +106,7 @@ export default function App() {
           <IconBtn icon="menu" label="Menú" onClick={() => setDrawer(true)} />
           <div className="grow" />
           {route.view === 'trash' && list.length > 0 && <button className="btn small danger" onClick={() => { if (confirm('¿Vaciar la papelera?')) emptyTrash(); }} type="button">Vaciar</button>}
+          <IconBtn icon={settings.view === 'list' ? 'rows' : settings.view === 'large' ? 'large' : 'grid'} label="Cómo ver las notas" onClick={() => setViewSheet(true)} />
           <IconBtn icon={searching ? 'close' : 'search'} label="Buscar" onClick={() => { setSearching(!searching); if (searching) setQ(''); }} />
         </div>
 
@@ -107,6 +114,14 @@ export default function App() {
           <div className="eyebrow">{eyebrow}</div>
           <h1 className="title">{title}</h1>
         </div>
+
+        {subfolders.length > 0 && (
+          <div className="subfolders">
+            {subfolders.map((f) => (
+              <button key={f.id} className="chip folder btn" onClick={() => navigate({ view: 'folder', arg: f.id })} type="button"><Icon name="folder" size={12} />{f.name}</button>
+            ))}
+          </div>
+        )}
 
         {searching && (
           <div className="searchbar">
@@ -133,6 +148,14 @@ export default function App() {
 
       {route.view !== 'trash' && !route.note && !route.settings && (
         <button className="fab" onClick={create} aria-label="Nueva nota" type="button"><Icon name="plus" size={26} /></button>
+      )}
+
+      {viewSheet && (
+        <Sheet title="Cómo ver las notas" onClose={() => setViewSheet(false)}>
+          <SheetItem icon="grid" label="Grilla" sub={settings.view === 'grid' ? '✓' : 'tarjetas en columnas'} onClick={() => { setSettings({ view: 'grid' }); setViewSheet(false); }} />
+          <SheetItem icon="rows" label="Lista" sub={settings.view === 'list' ? '✓' : 'una línea por nota'} onClick={() => { setSettings({ view: 'list' }); setViewSheet(false); }} />
+          <SheetItem icon="large" label="Grande" sub={settings.view === 'large' ? '✓' : 'más texto de cada nota'} onClick={() => { setSettings({ view: 'large' }); setViewSheet(false); }} />
+        </Sheet>
       )}
 
       {route.note && <Editor key={route.note} id={route.note} route={route} />}

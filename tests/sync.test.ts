@@ -174,3 +174,43 @@ test('sync: nota editada localmente después de borrarse en remoto se conserva',
   assert.equal(b.notes().length, 1);
   assert.ok(gh.files.has('notes/x-aaaaaaaaaa.md'));
 });
+
+test('sync: carpetas anidadas y color viajan entre dispositivos', async () => {
+  const gh = new FakeRemote();
+  const a = new Device(); const b = new Device();
+  a.folderList.push({ id: 'f1', name: 'Trabajo', parentId: null, createdAt: 1 }, { id: 'f2', name: 'Proyectos', parentId: 'f1', createdAt: 1 });
+  a.add('aaaaaaaaaa', 'Plan', 'x', { folderId: 'f2', color: 'azul' }, 1000);
+  a.add('bbbbbbbbbb', 'Suelta', 'y', { folderId: 'f1' }, 1000);
+  await runSync(gh, a);
+  assert.ok(gh.files.has('notes/Trabajo/Proyectos/plan-aaaaaaaaaa.md'));
+  assert.ok(gh.files.has('notes/Trabajo/suelta-bbbbbbbbbb.md'));
+  await runSync(gh, b);
+  const n = b.notesMap.get('aaaaaaaaaa')!;
+  assert.equal(n.color, 'azul');
+  const leaf = b.folderList.find((f) => f.id === n.folderId)!;
+  assert.equal(leaf.name, 'Proyectos');
+  assert.equal(b.folderList.find((f) => f.id === leaf.parentId)?.name, 'Trabajo');
+  // no se duplica "Trabajo" para la otra nota
+  assert.equal(b.folderList.filter((f) => f.name === 'Trabajo').length, 1);
+  assert.equal(b.notesMap.get('bbbbbbbbbb')!.folderId, leaf.parentId);
+});
+
+test('sync: mover una carpeta cambia la ruta de sus notas en GitHub', async () => {
+  const gh = new FakeRemote();
+  const a = new Device();
+  a.folderList.push({ id: 'f1', name: 'A', parentId: null, createdAt: 1 }, { id: 'f2', name: 'B', parentId: null, createdAt: 1 });
+  a.add('aaaaaaaaaa', 'Nota', 'x', { folderId: 'f2' }, 1000);
+  await runSync(gh, a);
+  assert.ok(gh.files.has('notes/B/nota-aaaaaaaaaa.md'));
+  a.folderList[1] = { ...a.folderList[1], parentId: 'f1' };
+  a.edit('aaaaaaaaaa', {}, 2000); // mover una carpeta marca como editadas a sus notas
+  await runSync(gh, a);
+  assert.ok(gh.files.has('notes/A/B/nota-aaaaaaaaaa.md'));
+  assert.ok(!gh.files.has('notes/B/nota-aaaaaaaaaa.md'));
+});
+
+test('frontmatter: el color se conserva y un color inválido se ignora', () => {
+  const n: Note = { id: 'abcdefghij', title: 't', body: 'b', folderId: null, tags: [], pinned: false, trashed: false, color: 'rosa', createdAt: 1, updatedAt: 2 };
+  assert.equal(parseNote(serializeNote(n, null))!.color, 'rosa');
+  assert.equal(parseNote(serializeNote(n, null).replace('"rosa"', '"fucsia"'))!.color, null);
+});

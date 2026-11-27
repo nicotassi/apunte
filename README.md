@@ -2,7 +2,10 @@
 
 Notas simples, rápidas y sin fricción. Pensada para el celular (PWA instalable y offline), con la calma de Google Keep y algunas cosas más:
 
-- **Carpetas** y **tags** (filtrá tocando un tag en el menú).
+- **Carpetas** (que se pueden anidar: subcarpetas, mover, renombrar) y **tags**.
+- **Colores** para las notas (8 colores suaves, se ven en la tarjeta y en el editor).
+- **Tres vistas** de la lista: grilla, lista compacta y grande.
+- **Dictado por voz**: botón de micrófono en el editor. Decí "nueva línea", "nuevo párrafo" o "punto y aparte" para dar formato.
 - **Markdown con vista previa en vivo** (como Obsidian, tablas incluidas): el formato aparece mientras escribís y los símbolos (`**`, `#`, `[]()`) se ocultan al salir de ese texto. Los `- [ ]` se tildan tocándolos.
 - **Imágenes**: desde la galería/cámara o pegadas. Se comprimen solas.
 - **Pegar con formato**: copiás de ChatGPT (títulos, negritas, listas, tablas, código) y al pegar queda como Markdown.
@@ -26,7 +29,7 @@ Cada push a `main` la republica (`.github/workflows/deploy.yml`; en *Settings �
 En el repo queda:
 
 ```
-notes/<carpeta>/<titulo>-<id>.md    # una nota por archivo, con encabezado YAML (id, título, tags…)
+notes/<carpeta>/<sub>/<titulo>-<id>.md   # una nota por archivo, con encabezado YAML (id, título, tags, color…)
 notes/<titulo>-<id>.md              # notas sin carpeta
 assets/<id>.jpg                     # imágenes
 ```

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import * as db from './db';
 import { DEFAULT_SETTINGS, type Folder, type Note, type Settings, type SyncState } from './types';
 import { debounce, nid, normTag } from './util';
+import { withDescendants } from './folders';
 import { GitHubRemote, parseRepo, runSync, SyncError, type SyncIO } from './sync';
 import { getImageBytes, imageNames, putImageBytes } from './images';
 
@@ -94,7 +95,7 @@ export function newNote(init: Partial<Note> = {}): string {
   return n.id;
 }
 
-export function updateNote(id: string, patch: Partial<Pick<Note, 'title' | 'body' | 'folderId' | 'tags' | 'pinned' | 'trashed'>>) {
+export function updateNote(id: string, patch: Partial<Pick<Note, 'title' | 'body' | 'folderId' | 'tags' | 'pinned' | 'trashed' | 'color'>>) {
   const cur = get().notes[id];
   if (!cur) return;
   const next: Note = { ...cur, ...patch, updatedAt: Date.now() };
@@ -129,34 +130,64 @@ export function dropIfEmpty(id: string) {
   }
 }
 
-/* ───────────── Carpetas ───────────── */
+/* ───────────── Carpetas (se pueden anidar) ───────────── */
 
-export function addFolder(name: string): string | null {
-  const nm = name.trim();
+const cleanName = (n: string) => n.replace(/[\\/]+/g, '-').trim();
+
+export function addFolder(name: string, parentId: string | null = null): string | null {
+  const nm = cleanName(name);
   if (!nm) return null;
-  const dup = Object.values(get().folders).find((f) => f.name.toLowerCase() === nm.toLowerCase());
+  const dup = Object.values(get().folders).find((f) => f.name.toLowerCase() === nm.toLowerCase() && (f.parentId ?? null) === parentId);
   if (dup) return dup.id;
-  const f: Folder = { id: nid(), name: nm, createdAt: Date.now() };
+  const f: Folder = { id: nid(), name: nm, parentId, createdAt: Date.now() };
   set({ folders: { ...get().folders, [f.id]: f } });
   void db.put('folders', f);
   return f.id;
 }
 
+/** La ruta de GitHub de cada nota incluye los nombres de sus carpetas: si una carpeta cambia, sus notas se resincronizan. */
+function touchNotesUnder(folderId: string) {
+  const ids = withDescendants(folderId, get().folders);
+  for (const n of Object.values(get().notes)) if (n.folderId && ids.has(n.folderId)) updateNote(n.id, {});
+}
+
 export function renameFolder(id: string, name: string) {
   const f = get().folders[id];
-  const nm = name.trim();
+  const nm = cleanName(name);
   if (!f || !nm || nm === f.name) return;
   const nf = { ...f, name: nm };
   set({ folders: { ...get().folders, [id]: nf } });
   void db.put('folders', nf);
-  // El nombre viaja dentro de cada nota: se marcan como modificadas para que se resincronicen.
-  for (const n of Object.values(get().notes)) if (n.folderId === id) updateNote(n.id, {});
+  touchNotesUnder(id);
 }
 
+/** Mueve una carpeta adentro de otra (o a la raíz con null). No se puede mover adentro de sí misma. */
+export function moveFolder(id: string, parentId: string | null): boolean {
+  const f = get().folders[id];
+  if (!f || (f.parentId ?? null) === parentId) return false;
+  if (parentId && withDescendants(id, get().folders).has(parentId)) return false;
+  const nf = { ...f, parentId };
+  set({ folders: { ...get().folders, [id]: nf } });
+  void db.put('folders', nf);
+  touchNotesUnder(id);
+  return true;
+}
+
+/** Al borrar una carpeta, sus notas y subcarpetas suben un nivel (no se pierde nada). */
 export function deleteFolder(id: string) {
-  for (const n of Object.values(get().notes)) if (n.folderId === id) updateNote(n.id, { folderId: null });
-  const { [id]: _gone, ...rest } = get().folders;
-  set({ folders: rest });
+  const f = get().folders[id];
+  if (!f) return;
+  const up = f.parentId ?? null;
+  const folders = { ...get().folders };
+  for (const c of Object.values(folders)) {
+    if (c.parentId === id) { folders[c.id] = { ...c, parentId: up }; void db.put('folders', folders[c.id]); }
+  }
+  const affected = new Set(withDescendants(id, get().folders));
+  for (const n of Object.values(get().notes)) {
+    if (n.folderId && affected.has(n.folderId)) updateNote(n.id, n.folderId === id ? { folderId: up } : {});
+  }
+  delete folders[id];
+  set({ folders });
   void db.del('folders', id);
 }
 

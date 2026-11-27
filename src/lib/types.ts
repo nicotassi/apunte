@@ -1,3 +1,6 @@
+export const NOTE_COLORS = ['terracota', 'naranja', 'amarillo', 'verde', 'turquesa', 'azul', 'violeta', 'rosa'] as const;
+export type NoteColor = (typeof NOTE_COLORS)[number];
+
 export interface Note {
   id: string;
   title: string;
@@ -6,13 +9,15 @@ export interface Note {
   tags: string[];
   pinned: boolean;
   trashed: boolean;
+  color?: NoteColor | null;
   createdAt: number;
   updatedAt: number;
 }
 
 export interface Folder {
   id: string;
-  name: string;
+  name: string; // solo el nombre de esta carpeta (sin las de arriba)
+  parentId?: string | null; // carpeta que la contiene
   createdAt: number;
 }
 
@@ -27,6 +32,7 @@ export interface Settings {
   theme: 'auto' | 'light' | 'dark';
   uiSize: 0 | 1 | 2 | 3; // tamaño de la interfaz de la app (no de las notas)
   textSize: 0 | 1 | 2; // tamaño del texto de las notas
+  view: 'grid' | 'list' | 'large'; // cómo se ven las notas en la lista
   titleFont: 'fraunces' | 'lora' | 'newsreader' | 'sans'; // letra de los títulos
   sync: SyncConfig;
 }
@@ -46,6 +52,7 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'auto',
   uiSize: 1,
   textSize: 1,
+  view: 'grid',
   titleFont: 'fraunces',
   sync: { repo: '', branch: '', token: '', auto: true },
 };

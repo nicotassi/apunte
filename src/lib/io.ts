@@ -3,6 +3,7 @@ import { getImageBytes, imageNames } from './images';
 import { b64encode } from './sync';
 import { parseNote, serializeNote } from './frontmatter';
 import { download, nid, slug } from './util';
+import { folderPath } from './folders';
 import type { Folder, Note } from './types';
 
 /** Descarga una copia completa (notas, carpetas e imágenes) en un único archivo .json. */
@@ -18,7 +19,7 @@ export async function exportBackup() {
 }
 
 export function downloadNoteMd(n: Note) {
-  const folder = n.folderId ? useStore.getState().folders[n.folderId]?.name ?? null : null;
+  const folder = folderPath(n.folderId, useStore.getState().folders) || null;
   download(`${slug(n.title) || 'nota'}.md`, new Blob([serializeNote(n, folder)], { type: 'text/markdown' }));
 }
 
@@ -33,7 +34,7 @@ export async function readImportFile(file: File): Promise<{ notes?: Note[]; fold
   const now = Date.now();
   const p = parseNote(text);
   if (p) {
-    return { notes: [{ id: p.id, title: p.title, body: p.body, folderId: null, tags: p.tags, pinned: p.pinned, trashed: p.trashed, createdAt: p.createdAt, updatedAt: p.updatedAt }] };
+    return { notes: [{ id: p.id, title: p.title, body: p.body, folderId: null, tags: p.tags, pinned: p.pinned, trashed: p.trashed, color: p.color, createdAt: p.createdAt, updatedAt: p.updatedAt }] };
   }
   const title = file.name.replace(/\.(md|markdown|txt)$/i, '');
   const id = nid();

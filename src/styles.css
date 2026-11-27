@@ -21,6 +21,8 @@
   --tw: 500; /* grosor de los títulos */
   --ui: 1; /* tamaño de la interfaz */
   --txt: 1; /* tamaño del texto de las notas */
+  --c-terracota: #f6dccd; --c-naranja: #f9e3c2; --c-amarillo: #f7efb9; --c-verde: #dcebd0;
+  --c-turquesa: #cfe9e4; --c-azul: #d3e3f3; --c-violeta: #e2dcf3; --c-rosa: #f5d9e4;
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-t: env(safe-area-inset-top, 0px);
   color-scheme: light;
@@ -29,6 +31,8 @@
   --bg: #151412; --bg-2: #1c1a17; --surface: #1f1d1a; --surface-2: #252320;
   --ink: #f2ede4; --ink-2: #bdb6aa; --ink-3: #847d71; --line: #2f2c27; --line-2: #3b3731;
   --accent-soft: #3a271d;
+  --c-terracota: #4a2e22; --c-naranja: #4a3920; --c-amarillo: #474020; --c-verde: #2b3f2a;
+  --c-turquesa: #213f3b; --c-azul: #25364a; --c-violeta: #38304f; --c-rosa: #4b2a38;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
   --shadow-lg: 0 24px 60px -20px rgba(0, 0, 0, 0.8);
   color-scheme: dark;
@@ -38,6 +42,8 @@
     --bg: #151412; --bg-2: #1c1a17; --surface: #1f1d1a; --surface-2: #252320;
     --ink: #f2ede4; --ink-2: #bdb6aa; --ink-3: #847d71; --line: #2f2c27; --line-2: #3b3731;
     --accent-soft: #3a271d;
+    --c-terracota: #4a2e22; --c-naranja: #4a3920; --c-amarillo: #474020; --c-verde: #2b3f2a;
+    --c-turquesa: #213f3b; --c-azul: #25364a; --c-violeta: #38304f; --c-rosa: #4b2a38;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
     --shadow-lg: 0 24px 60px -20px rgba(0, 0, 0, 0.8);
     color-scheme: dark;
@@ -295,3 +301,48 @@ code { background: var(--bg-2); padding: 0.05rem 0.35rem; border-radius: 0.35rem
 
 .cm-tablewrap { margin: 0.6em 0; overflow-x: auto; max-width: 100%; }
 .cm-tablewrap table { margin: 0; }
+
+/* ---------- Colores de las notas ---------- */
+.c-terracota { --note-bg: var(--c-terracota); } .c-naranja { --note-bg: var(--c-naranja); }
+.c-amarillo { --note-bg: var(--c-amarillo); } .c-verde { --note-bg: var(--c-verde); }
+.c-turquesa { --note-bg: var(--c-turquesa); } .c-azul { --note-bg: var(--c-azul); }
+.c-violeta { --note-bg: var(--c-violeta); } .c-rosa { --note-bg: var(--c-rosa); }
+.card { background: var(--note-bg, var(--surface)); }
+.card[class*='c-'] { border-color: color-mix(in srgb, var(--note-bg) 70%, var(--ink) 12%); }
+.editor-wrap { background: var(--note-bg, var(--bg)); }
+.editor-wrap .editor { background: var(--note-bg, var(--bg)); }
+@media (min-width: 900px) { .editor-wrap { background: rgba(20, 15, 5, 0.4); } }
+.editor-wrap .chip:not(.folder) { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.7rem; padding: 0.6rem 0.7rem 0.9rem; }
+.swatch { aspect-ratio: 1; border-radius: 50%; border: 2px solid var(--line-2); background: var(--note-bg, var(--surface)); display: grid; place-items: center; color: var(--ink-3); font-size: 1.1rem; }
+.swatch.on { border-color: var(--ink); box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); }
+
+/* ---------- Vistas de la lista ---------- */
+.card-main { min-width: 0; }
+.v-list { column-count: 1 !important; }
+.v-list .card { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; }
+.v-list .card-main { flex: 1; order: 1; }
+.v-list .card-img { order: 2; width: 3.4rem; height: 3.4rem; margin: 0; border-radius: 0.7rem; flex: none; }
+.v-list .card-title { font-size: 1rem; margin-bottom: 0.1rem; padding-right: 1.2rem; }
+.v-list .card-text { -webkit-line-clamp: 1; }
+.v-list .chips { margin-top: 0.35rem; }
+.v-list .card-pin { top: 0.5rem; right: 0.6rem; }
+.v-large { column-count: 1 !important; }
+@media (min-width: 900px) { .v-large { column-count: 2 !important; } }
+.v-large .card { padding: 1.1rem 1.2rem; }
+.v-large .card-img { height: 13rem; margin: -1.1rem -1.2rem 0.9rem; width: calc(100% + 2.4rem); }
+.v-large .card-title { font-size: 1.3rem; }
+.v-large .card-text { -webkit-line-clamp: 14; font-size: 0.92rem; }
+.subfolders { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: -0.3rem 0 1rem; }
+.subfolders .chip { padding: 0.35rem 0.8rem; font-size: 0.8rem; }
+
+/* ---------- Carpetas anidadas ---------- */
+.nav-chev { border: 0; background: transparent; color: var(--ink-3); padding: 0.4rem 0.2rem 0.4rem 0.3rem; display: grid; border-radius: 0.5rem; }
+.nav-chev svg { transition: transform 0.15s; }
+.nav-chev.open svg { transform: rotate(90deg); }
+.nav-chev.off { visibility: hidden; }
+
+/* ---------- Dictado ---------- */
+.toolbar button.rec { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); animation: pulse 1.2s infinite; }
+.listening { position: absolute; left: 1rem; right: 1rem; bottom: 4.4rem; display: flex; align-items: center; gap: 0.6rem; background: var(--ink); color: var(--bg); border-radius: 999px; padding: 0.5rem 1rem; font-size: 0.82rem; box-shadow: var(--shadow-lg); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.rec-dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #ff5a4d; flex: none; animation: pulse 1s infinite; }
