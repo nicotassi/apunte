@@ -7,7 +7,7 @@ import { parseRepo } from '../lib/sync';
 import { ago } from '../lib/util';
 import { Icon } from './Icons';
 import { IconBtn, Segmented } from './ui';
-import { TITLE_FONTS } from '../lib/fonts';
+import { BODY_FONTS, TITLE_FONTS } from '../lib/fonts';
 
 export function Settings({ route }: { route: Route }) {
   const settings = useStore((s) => s.settings);
@@ -68,11 +68,24 @@ export function Settings({ route }: { route: Route }) {
               <Segmented value={settings.theme} onChange={(theme) => setSettings({ theme })} options={[{ v: 'auto', label: 'Auto' }, { v: 'light', label: 'Claro' }, { v: 'dark', label: 'Oscuro' }]} />
             </div>
             <div className="set-row">
+              <label>Letra del texto<span className="muted small"> en toda la app</span></label>
+              <Segmented
+                value={settings.bodyFont}
+                onChange={(bodyFont) => setSettings({ bodyFont })}
+                options={[
+                  { v: 'inter', label: 'Inter', font: BODY_FONTS.inter },
+                  { v: 'claude', label: 'Claude', font: BODY_FONTS.claude },
+                  { v: 'system', label: 'Sistema', font: BODY_FONTS.system },
+                ]}
+              />
+            </div>
+            <div className="set-row">
               <label>Letra de los títulos</label>
               <Segmented
                 value={settings.titleFont}
                 onChange={(titleFont) => setSettings({ titleFont })}
                 options={[
+                  { v: 'claude', label: 'Claude', font: TITLE_FONTS.claude.css },
                   { v: 'fraunces', label: 'Fraunces', font: TITLE_FONTS.fraunces.css },
                   { v: 'lora', label: 'Lora', font: TITLE_FONTS.lora.css },
                   { v: 'newsreader', label: 'Newsreader', font: TITLE_FONTS.newsreader.css },

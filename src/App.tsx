@@ -9,7 +9,7 @@ import { Editor } from './components/Editor';
 import { Settings } from './components/Settings';
 import { Icon } from './components/Icons';
 import { IconBtn, Sheet, SheetItem } from './components/ui';
-import { TITLE_FONTS } from './lib/fonts';
+import { BODY_FONTS, TITLE_FONTS } from './lib/fonts';
 
 const UI_SCALE = [0.9, 1, 1.12, 1.26];
 const TXT_SCALE = [0.9, 1, 1.18];
@@ -53,9 +53,10 @@ export default function App() {
     const tf = TITLE_FONTS[settings.titleFont] ?? TITLE_FONTS.fraunces;
     root.style.setProperty('--serif', tf.css);
     root.style.setProperty('--tw', String(tf.weight));
+    root.style.setProperty('--sans', BODY_FONTS[settings.bodyFont] ?? BODY_FONTS.inter);
     const dark = settings.theme === 'dark' || (settings.theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#151412' : '#f7f4ee');
-  }, [settings.theme, settings.uiSize, settings.textSize, settings.titleFont]);
+  }, [settings.theme, settings.uiSize, settings.textSize, settings.titleFont, settings.bodyFont]);
 
   const list = useMemo(() => {
     const needle = q.trim().toLowerCase();

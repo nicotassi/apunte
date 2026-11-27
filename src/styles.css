@@ -79,7 +79,7 @@ button { cursor: pointer; }
 .top { display: flex; align-items: center; gap: 0.4rem; margin: 0 -0.4rem; }
 .page-head { margin: 0.5rem 0 1.1rem; }
 .eyebrow { font-size: 0.72rem; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.09em; font-weight: 600; }
-h1.title { font-family: var(--serif); font-weight: var(--tw, 500); font-size: clamp(1.9rem, 7.5vw, 2.7rem); line-height: 1.1; letter-spacing: -0.015em; margin: 0.25rem 0 0; overflow-wrap: anywhere; }
+h1.title { font-family: var(--serif); font-weight: var(--tw, 500); font-size: clamp(2.2rem, 9vw, 3.2rem); line-height: 1.08; letter-spacing: -0.015em; margin: 0.25rem 0 0; overflow-wrap: anywhere; }
 .group-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); font-weight: 600; margin: 1rem 0.2rem 0.6rem; }
 
 .icon-btn { width: 2.5rem; height: 2.5rem; border-radius: 0.8rem; border: 0; background: transparent; color: var(--ink-2); display: grid; place-items: center; flex: none; }
@@ -106,7 +106,7 @@ h1.title { font-family: var(--serif); font-weight: var(--tw, 500); font-size: cl
 .card:active { transform: scale(0.99); }
 .card-img { display: block; width: calc(100% + 1.8rem); margin: -0.85rem -0.9rem 0.7rem; height: 7.5rem; object-fit: cover; background: var(--bg-2); }
 .card-pin { position: absolute; top: 0.6rem; right: 0.65rem; color: var(--accent); background: color-mix(in srgb, var(--surface) 80%, transparent); border-radius: 999px; padding: 0.15rem; display: grid; }
-.card-title { font-family: var(--serif); font-weight: var(--tw, 500); font-size: 1.08rem; line-height: 1.25; margin-bottom: 0.35rem; overflow-wrap: anywhere; padding-right: 1rem; }
+.card-title { font-family: var(--serif); font-weight: var(--tw, 500); font-size: 1.3rem; line-height: 1.2; margin-bottom: 0.35rem; overflow-wrap: anywhere; padding-right: 1rem; }
 .card-text { color: var(--ink-2); font-size: 0.84rem; white-space: pre-line; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 7; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
 .chips { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.65rem; }
 .chip { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.72rem; padding: 0.15rem 0.55rem; border-radius: 999px; background: var(--bg-2); color: var(--ink-2); border: 0; font-weight: 500; }
@@ -171,7 +171,7 @@ h1.title { font-family: var(--serif); font-weight: var(--tw, 500); font-size: cl
 .ed-head { display: flex; align-items: center; gap: 0.1rem; padding: calc(0.45rem + var(--safe-t)) 0.5rem 0.35rem; flex: none; }
 .ed-head-title { font-weight: 500; font-size: 1.3rem; margin-left: 0.3rem; }
 .ed-scroll { flex: 1; overflow-y: auto; padding: 0.4rem 1.2rem 1.2rem; -webkit-overflow-scrolling: touch; }
-.ed-title { width: 100%; border: 0; outline: none; background: transparent; font-family: var(--serif); font-weight: var(--tw, 500); font-size: 1.7rem; line-height: 1.2; letter-spacing: -0.01em; padding: 0.2rem 0; color: var(--ink); }
+.ed-title { display: block; width: 100%; border: 0; outline: none; resize: none; overflow: hidden; background: transparent; font-family: var(--serif); font-weight: var(--tw, 500); font-size: 2.5rem; line-height: 1.12; letter-spacing: -0.02em; padding: 0.2rem 0; color: var(--ink); overflow-wrap: anywhere; }
 .ed-title::placeholder, .ed-body::placeholder { color: var(--ink-3); opacity: 0.7; }
 .ed-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; margin: 0.4rem 0 1rem; }
 .chip.btn.folder { cursor: pointer; padding: 0.25rem 0.65rem; }
@@ -205,7 +205,7 @@ h1.title { font-family: var(--serif); font-weight: var(--tw, 500); font-size: cl
 .set-sec .h3 { font-size: 0.95rem; margin: 0 0 0.7rem; }
 .set-row { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; padding: 0.5rem 0; flex-wrap: wrap; }
 .set-row label { font-size: 0.9rem; font-weight: 500; }
-.seg { display: inline-flex; background: var(--bg-2); border-radius: 0.8rem; padding: 0.18rem; }
+.seg { display: inline-flex; flex-wrap: wrap; background: var(--bg-2); border-radius: 0.8rem; padding: 0.18rem; }
 .seg button { border: 0; background: transparent; padding: 0.35rem 0.8rem; border-radius: 0.65rem; font-size: 0.82rem; font-weight: 500; color: var(--ink-2); }
 .seg button.on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
 .field { width: 100%; padding: 0.7rem 0.85rem; border: 1px solid var(--line-2); border-radius: var(--radius-sm); background: var(--bg); outline: none; margin-bottom: 0.6rem; }
@@ -223,7 +223,7 @@ code { background: var(--bg-2); padding: 0.05rem 0.35rem; border-radius: 0.35rem
 .md { font-size: calc(16px * var(--txt)); line-height: 1.65; overflow-wrap: anywhere; color: var(--ink); }
 .md > :first-child { margin-top: 0; }
 .md h1, .md h2, .md h3, .md h4 { font-family: var(--serif); font-weight: var(--tw, 500); line-height: 1.25; margin: 1.3em 0 0.45em; letter-spacing: -0.01em; }
-.md h1 { font-size: 1.6em; } .md h2 { font-size: 1.38em; } .md h3 { font-size: 1.2em; } .md h4 { font-size: 1.08em; }
+.md h1 { font-size: 2em; } .md h2 { font-size: 1.6em; } .md h3 { font-size: 1.32em; } .md h4 { font-size: 1.1em; }
 .md p { margin: 0.6em 0; }
 .md ul, .md ol { padding-left: 1.4em; margin: 0.5em 0; }
 .md li { margin: 0.2em 0; }
@@ -272,7 +272,7 @@ code { background: var(--bg-2); padding: 0.05rem 0.35rem; border-radius: 0.35rem
 .live-editor .cm-selectionBackground, .live-editor .cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background: var(--accent-soft) !important; }
 
 .cm-h { font-family: var(--serif); font-weight: var(--tw, 500); letter-spacing: -0.01em; line-height: 1.3; padding-top: 0.5em !important; }
-.cm-h1 { font-size: 1.6em; } .cm-h2 { font-size: 1.38em; } .cm-h3 { font-size: 1.2em; }
+.cm-h1 { font-size: 2em; } .cm-h2 { font-size: 1.6em; } .cm-h3 { font-size: 1.32em; }
 .cm-h4, .cm-h5, .cm-h6 { font-size: 1.08em; }
 .cm-strong { font-weight: 700; }
 .cm-em { font-style: italic; }
@@ -323,7 +323,7 @@ code { background: var(--bg-2); padding: 0.05rem 0.35rem; border-radius: 0.35rem
 .v-list .card { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; }
 .v-list .card-main { flex: 1; order: 1; }
 .v-list .card-img { order: 2; width: 3.4rem; height: 3.4rem; margin: 0; border-radius: 0.7rem; flex: none; }
-.v-list .card-title { font-size: 1rem; margin-bottom: 0.1rem; padding-right: 1.2rem; }
+.v-list .card-title { font-size: 1.12rem; margin-bottom: 0.1rem; padding-right: 1.2rem; }
 .v-list .card-text { -webkit-line-clamp: 1; }
 .v-list .chips { margin-top: 0.35rem; }
 .v-list .card-pin { top: 0.5rem; right: 0.6rem; }
@@ -331,7 +331,7 @@ code { background: var(--bg-2); padding: 0.05rem 0.35rem; border-radius: 0.35rem
 @media (min-width: 900px) { .v-large { column-count: 2 !important; } }
 .v-large .card { padding: 1.1rem 1.2rem; }
 .v-large .card-img { height: 13rem; margin: -1.1rem -1.2rem 0.9rem; width: calc(100% + 2.4rem); }
-.v-large .card-title { font-size: 1.3rem; }
+.v-large .card-title { font-size: 1.55rem; }
 .v-large .card-text { -webkit-line-clamp: 14; font-size: 0.92rem; }
 .subfolders { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: -0.3rem 0 1rem; }
 .subfolders .chip { padding: 0.35rem 0.8rem; font-size: 0.8rem; }

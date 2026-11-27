@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { redo, undo } from '@codemirror/commands';
 import type { EditorView } from '@codemirror/view';
 import { useStore, updateNote, deleteForever, dropIfEmpty, addFolder } from '../lib/store';
 import { closeOverlay, type Route } from '../lib/router';
@@ -29,6 +30,7 @@ export function Editor({ id, route }: { id: string; route: Route }) {
   const stopDictation = useRef<(() => void) | null>(null);
 
   const viewRef = useRef<EditorView | null>(null);
+  const titleRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const dirty = useRef(false);
   const latest = useRef({ title, body });
@@ -56,6 +58,20 @@ export function Editor({ id, route }: { id: string; route: Route }) {
     if (note.title !== latest.current.title) setTitle(note.title);
     if (note.body !== latest.current.body) setBody(note.body);
   }, [note?.updatedAt]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // El título puede ser largo: la caja crece hacia abajo para que se vea completo.
+  const fitTitle = useCallback(() => {
+    const el = titleRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, []);
+  useLayoutEffect(fitTitle, [title, fitTitle]);
+  useEffect(() => {
+    window.addEventListener('resize', fitTitle);
+    void document.fonts?.ready.then(fitTitle);
+    return () => window.removeEventListener('resize', fitTitle);
+  }, [fitTitle]);
 
   const say = (m: string) => { setToast(m); setTimeout(() => setToast(''), 2200); };
   const close = () => { flush(); closeOverlay(route); };
@@ -201,12 +217,14 @@ export function Editor({ id, route }: { id: string; route: Route }) {
         )}
 
         <div className="ed-scroll">
-          <input
+          <textarea
+            ref={titleRef}
             className="ed-title"
+            rows={1}
             placeholder="Título"
             value={title}
             readOnly={readOnly}
-            onChange={(e) => { dirty.current = true; setTitle(e.target.value); }}
+            onChange={(e) => { dirty.current = true; setTitle(e.target.value.replace(/\n/g, ' ')); }}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); viewRef.current?.focus(); } }}
           />
 
@@ -251,6 +269,8 @@ export function Editor({ id, route }: { id: string; route: Route }) {
 
         {!readOnly && (
           <div className="toolbar" onMouseDown={(e) => e.preventDefault()}>
+            <button onClick={() => { const v = viewRef.current; if (v) { undo(v); v.focus(); } }} aria-label="Deshacer" type="button"><Icon name="undo" /></button>
+            <button onClick={() => { const v = viewRef.current; if (v) { redo(v); v.focus(); } }} aria-label="Rehacer" type="button"><Icon name="redo" /></button>
             <button className={listening ? 'rec' : ''} onClick={toggleDictation} aria-label={listening ? 'Parar dictado' : 'Dictar por voz'} type="button"><Icon name="mic" /></button>
             <button onClick={() => wrap('**')} aria-label="Negrita" type="button"><Icon name="bold" /></button>
             <button onClick={() => wrap('*')} aria-label="Cursiva" type="button"><Icon name="italic" /></button>

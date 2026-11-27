@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { EditorState, Prec } from '@codemirror/state';
+import { EditorState, Prec, Transaction } from '@codemirror/state';
 import { EditorView, keymap, placeholder } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
@@ -74,7 +74,7 @@ export function LiveEditor({ value, onChange, readOnly, autoFocus, onPasteImages
   // Cambios que llegan de afuera (por ejemplo, de la sincronización) mientras la nota está abierta.
   useEffect(() => {
     const v = viewRef.current;
-    if (v && v.state.doc.toString() !== value) v.dispatch({ changes: { from: 0, to: v.state.doc.length, insert: value } });
+    if (v && v.state.doc.toString() !== value) v.dispatch({ changes: { from: 0, to: v.state.doc.length, insert: value }, annotations: Transaction.addToHistory.of(false) });
   }, [value]);
 
   return <div ref={host} className="live-editor" />;
