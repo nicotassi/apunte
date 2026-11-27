@@ -1,7 +1,7 @@
 // Apunte: cache de la app para abrir rápido y sin conexión. Las notas viven en IndexedDB (no pasan por acá).
 // La página principal se pide siempre fresca para que las versiones nuevas lleguen enseguida.
-const CACHE = 'apunte-v1';
-const CORE = ['./', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
+const CACHE = 'apunte-v2';
+const CORE = ['./', 'manifest.webmanifest?v=2', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE.map((u) => new Request(u, { cache: 'reload' })))).catch(() => {}).then(() => self.skipWaiting()));
 });
