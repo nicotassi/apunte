@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useStore, initStore, newNote, emptyTrash, setSettings, updateNote, duplicateNotes, deleteForever } from './lib/store';
+import { useStore, initStore, syncNow, newNote, emptyTrash, setSettings, updateNote, duplicateNotes, deleteForever } from './lib/store';
 import { folderChain, withDescendants } from './lib/folders';
 import { closeOverlay, navigate, useRoute } from './lib/router';
 import { applyUpdate, checkForUpdate, useUpdate } from './lib/update';
@@ -24,6 +24,7 @@ export default function App() {
   const notes = useStore((s) => s.notes);
   const folders = useStore((s) => s.folders);
   const settings = useStore((s) => s.settings);
+  const sync = useStore((s) => ({ status: s.syncStatus, msg: s.syncMessage }));
   const updateAvailable = useUpdate((s) => s.available);
   const [drawer, setDrawer] = useState(false);
   const [q, setQ] = useState('');
@@ -227,6 +228,11 @@ export default function App() {
             <IconBtn icon="menu" label="Menú" onClick={() => setDrawer(true)} />
             <div className="grow" />
             {route.view === 'trash' && list.length > 0 && <button className="btn small danger" onClick={() => { if (confirm('¿Vaciar la papelera?')) emptyTrash(); }} type="button">Vaciar</button>}
+            {(sync.status === 'syncing' || sync.status === 'offline' || sync.status === 'error') && (
+              <button className={`sync-chip ${sync.status}`} onClick={() => void syncNow()} aria-label={sync.status === 'syncing' ? 'Sincronizando' : sync.status === 'offline' ? 'Sin conexión: se sincroniza al volver' : 'Error de sincronización: tocá para reintentar'} title={sync.msg} type="button">
+                <Icon name={sync.status === 'offline' ? 'cloudoff' : 'cloud'} size={17} />
+              </button>
+            )}
             {list.length > 0 && <IconBtn icon="select" label="Seleccionar notas" onClick={() => startSelecting()} />}
             <IconBtn icon={settings.view === 'list' ? 'rows' : settings.view === 'large' ? 'large' : 'grid'} label="Cómo ver las notas" onClick={() => setViewSheet(true)} />
             <IconBtn icon={searching ? 'close' : 'search'} label="Buscar" onClick={() => { setSearching(!searching); if (searching) setQ(''); }} />

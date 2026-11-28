@@ -20,7 +20,30 @@ export async function checkForUpdate(): Promise<boolean> {
   }
 }
 
-export function applyUpdate() {
-  navigator.serviceWorker?.getRegistration().then((r) => r?.update()).catch(() => {});
+/** Baja la versión nueva completa (código y letras) y recién entonces recarga: así no queda a medias. */
+export async function applyUpdate() {
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration();
+    if (reg) {
+      await reg.update().catch(() => {}); // por si hay una versión nueva del servicio que guarda la app
+      const next = reg.installing ?? reg.waiting;
+      if (next && next.state !== 'activated') {
+        await new Promise<void>((resolve) => {
+          next.addEventListener('statechange', () => { if (next.state === 'activated' || next.state === 'redundant') resolve(); });
+          setTimeout(resolve, 8000);
+        });
+      }
+      const sw = reg.active;
+      if (sw) {
+        await new Promise<void>((resolve) => {
+          const done = () => { navigator.serviceWorker.removeEventListener('message', on); resolve(); };
+          const on = (e: MessageEvent) => { if (e.data?.type === 'shell-ready') done(); };
+          navigator.serviceWorker.addEventListener('message', on);
+          sw.postMessage({ type: 'update-shell' });
+          setTimeout(done, 6000);
+        });
+      }
+    }
+  } catch { /* se recarga igual */ }
   window.location.reload();
 }

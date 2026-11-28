@@ -32,6 +32,7 @@ const P: Record<string, ReactNode> = {
   table: <><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="M3 10h18M3 14.5h18M9.5 5v14M15 5v14" /></>,
   tick: <path d="m5 12.5 4.5 4.5L19 7.5" />,
   notelink: <path d="M10 4H7v16h3M14 4h3v16h-3M12 9v6" />,
+  cloudoff: <><path d="M7 18a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 4-3.9M17.1 11.2A3.4 3.4 0 0 1 17 18H9" /><path d="m4 4 16 16" /></>,
   select: <><rect x="4" y="4" width="16" height="16" rx="4" /><path d="m8.5 12.2 2.4 2.4 4.6-5" /></>,
   duplicate: <><rect x="9" y="9" width="11" height="11" rx="2.5" /><path d="M15 9V6.5A2.5 2.5 0 0 0 12.5 4H6.5A2.5 2.5 0 0 0 4 6.5v6A2.5 2.5 0 0 0 6.5 15H9" /></>,
   undo: <path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3" />,

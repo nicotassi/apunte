@@ -19,6 +19,8 @@ export interface GitRemote {
 }
 
 export class SyncError extends Error {}
+/** No se pudo hablar con GitHub (sin señal o muy lenta): no es un error de la cuenta, se reintenta solo. */
+export class OfflineError extends SyncError {}
 
 export function parseRepo(input: string): string {
   const s = input.trim().replace(/^https?:\/\/github\.com\//i, '').replace(/\.git$/i, '').replace(/^\/+|\/+$/g, '');
@@ -45,8 +47,12 @@ export class GitHubRemote implements GitRemote {
 
   private async api<T>(method: string, path: string, body?: unknown, okStatuses: number[] = []): Promise<T | null> {
     let res: Response;
+    // Con señal débil un pedido puede quedar colgado: se corta a los 25 segundos para no trabar la sincronización.
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 25_000);
     try {
       res = await fetch(`https://api.github.com/repos/${this.repo}${path}`, {
+        signal: ctl.signal,
         method,
         headers: {
           Authorization: `Bearer ${this.token}`,
@@ -58,7 +64,9 @@ export class GitHubRemote implements GitRemote {
         cache: 'no-store',
       });
     } catch {
-      throw new SyncError('Sin conexión con GitHub');
+      throw new OfflineError('Sin conexión con GitHub');
+    } finally {
+      clearTimeout(timer);
     }
     if (okStatuses.includes(res.status)) return null;
     if (!res.ok) {

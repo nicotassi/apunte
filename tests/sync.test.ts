@@ -214,3 +214,25 @@ test('frontmatter: el color se conserva y un color inválido se ignora', () => {
   assert.equal(parseNote(serializeNote(n, null))!.color, 'rosa');
   assert.equal(parseNote(serializeNote(n, null).replace('"rosa"', '"fucsia"'))!.color, null);
 });
+
+test('sync: si se corta la señal a mitad, no se pierde ni se daña nada y la próxima vez se completa', async () => {
+  const gh = new FakeRemote();
+  const a = new Device();
+  a.add('aaaaaaaaaa', 'Antes', 'x', {}, 1000);
+  await runSync(gh, a);
+  // sin señal: se escribe una nota nueva y se edita otra
+  a.add('bbbbbbbbbb', 'Nueva', 'y', {}, 2000);
+  a.edit('aaaaaaaaaa', { body: 'x editada' }, 2000);
+  const before = JSON.stringify(a.notes());
+  // vuelve la señal pero se corta justo al subir
+  const failing = Object.create(gh) as FakeRemote;
+  failing.commit = async () => { throw new Error('se cortó la señal'); };
+  await assert.rejects(runSync(failing, a));
+  assert.equal(JSON.stringify(a.notes()), before, 'las notas locales quedan idénticas');
+  assert.ok(!gh.files.has('notes/nueva-bbbbbbbbbb.md'), 'GitHub no recibió nada a medias');
+  // la siguiente vez, con señal, se completa
+  const r = await runSync(gh, a);
+  assert.equal(r.pushed, 2);
+  assert.ok(gh.files.has('notes/nueva-bbbbbbbbbb.md'));
+  assert.match(new TextDecoder().decode(gh.files.get('notes/antes-aaaaaaaaaa.md')!), /x editada/);
+});

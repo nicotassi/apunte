@@ -4,7 +4,7 @@ import { DEFAULT_SETTINGS, type Folder, type Note, type Settings, type SyncState
 import { debounce, nid, normTag } from './util';
 import { withDescendants } from './folders';
 import { normTitle, renameLinksInBody } from './wikilinks';
-import { GitHubRemote, parseRepo, runSync, SyncError, type SyncIO } from './sync';
+import { GitHubRemote, OfflineError, parseRepo, runSync, SyncError, type SyncIO } from './sync';
 import { getImageBytes, imageNames, putImageBytes } from './images';
 
 const SETTINGS_KEY = 'apunte.settings';
@@ -18,7 +18,7 @@ function loadSettings(): Settings {
   }
 }
 
-export type SyncStatus = 'off' | 'idle' | 'syncing' | 'ok' | 'error';
+export type SyncStatus = 'off' | 'idle' | 'syncing' | 'ok' | 'error' | 'offline';
 
 interface State {
   ready: boolean;
@@ -60,22 +60,35 @@ export function flushAll() {
   for (const id of [...timers.keys()]) flushNote(id);
 }
 
-export async function initStore() {
-  const [notes, folders, sync] = await Promise.all([db.getAll<Note>('notes'), db.getAll<Folder>('folders'), db.kvGet<SyncState>('sync')]);
-  syncState = sync ?? { files: {}, lastAt: 0 };
-  set({
-    ready: true,
-    notes: Object.fromEntries(notes.map((n) => [n.id, n])),
-    folders: Object.fromEntries(folders.map((f) => [f.id, f])),
-    syncStatus: syncConfigured() ? 'idle' : 'off',
-    syncAt: syncState.lastAt,
-  });
-  window.addEventListener('pagehide', flushAll);
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') flushAll();
-    else if (syncConfigured() && get().settings.sync.auto && Date.now() - get().syncAt > 60_000) void syncNow();
-  });
-  if (syncConfigured() && get().settings.sync.auto) void syncNow();
+let initPromise: Promise<void> | null = null;
+
+/**
+ * Arranque: lo primero es mostrar lo que hay guardado en el teléfono. Nada de esto espera a internet.
+ * Recién después, como segundo paso y sin molestar, se sincroniza con GitHub.
+ */
+export function initStore(): Promise<void> {
+  return (initPromise ??= (async () => {
+    const [notes, folders, sync] = await Promise.all([db.getAll<Note>('notes'), db.getAll<Folder>('folders'), db.kvGet<SyncState>('sync')]);
+    syncState = sync ?? { files: {}, lastAt: 0 };
+    set({
+      ready: true,
+      notes: Object.fromEntries(notes.map((n) => [n.id, n])),
+      folders: Object.fromEntries(folders.map((f) => [f.id, f])),
+      syncStatus: syncConfigured() ? (navigator.onLine ? 'idle' : 'offline') : 'off',
+      syncMessage: syncConfigured() && !navigator.onLine ? 'Sin conexión: se sincroniza cuando vuelva' : '',
+      syncAt: syncState.lastAt,
+    });
+    window.addEventListener('pagehide', flushAll);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') flushAll();
+      else if (syncConfigured() && get().settings.sync.auto && (Date.now() - get().syncAt > 60_000 || get().syncStatus === 'offline' || get().syncStatus === 'error')) void syncNow();
+    });
+    // Cuando vuelve internet (o se recupera la señal), se sincroniza solo.
+    window.addEventListener('online', () => { if (syncConfigured() && get().settings.sync.auto) void syncNow(); });
+    window.addEventListener('offline', () => { if (syncConfigured()) set({ syncStatus: 'offline', syncMessage: 'Sin conexión: se sincroniza cuando vuelva' }); });
+    // Segundo paso: con la pantalla ya dibujada, se trae lo de la nube y se mezcla con lo local.
+    if (syncConfigured() && get().settings.sync.auto) setTimeout(() => void syncNow(), 600);
+  })());
 }
 
 /* ───────────── Ajustes ───────────── */
@@ -229,11 +242,15 @@ export function syncConfigured(s: Settings = get().settings): boolean {
 }
 
 const scheduleSync = debounce(() => {
-  if (syncConfigured() && get().settings.sync.auto) void syncNow();
+  if (syncConfigured() && get().settings.sync.auto && navigator.onLine) void syncNow();
 }, 4000);
+
+let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
 export async function syncNow(): Promise<void> {
   if (!syncConfigured()) return;
+  clearTimeout(retryTimer);
+  if (!navigator.onLine) { set({ syncStatus: 'offline', syncMessage: 'Sin conexión: se sincroniza cuando vuelva' }); return; }
   if (syncing) { again = true; return; }
   syncing = true;
   flushAll();
@@ -264,7 +281,13 @@ export async function syncNow(): Promise<void> {
     const parts = [r.pushed && `${r.pushed} subida(s)`, r.pulled && `${r.pulled} bajada(s)`, r.removed && `${r.removed} borrada(s)`, r.conflicts && `${r.conflicts} conflicto(s)`].filter(Boolean);
     set({ syncStatus: 'ok', syncAt: syncState.lastAt, syncMessage: parts.length ? parts.join(', ') : 'Todo al día' });
   } catch (e) {
-    set({ syncStatus: 'error', syncMessage: e instanceof SyncError ? e.message : `Error al sincronizar: ${(e as Error).message}` });
+    if (e instanceof OfflineError) {
+      // sin señal o muy lenta: no es un error, se vuelve a intentar solo
+      set({ syncStatus: 'offline', syncMessage: 'Sin conexión: se sincroniza cuando vuelva' });
+      retryTimer = setTimeout(() => void syncNow(), 30_000);
+    } else {
+      set({ syncStatus: 'error', syncMessage: e instanceof SyncError ? e.message : `Error al sincronizar: ${(e as Error).message}` });
+    }
   } finally {
     syncing = false;
     if (again) { again = false; scheduleSync(); }

@@ -78,6 +78,7 @@ export function Sidebar({ route, open, onClose }: { route: Route; open: boolean;
   );
 
   const syncLabel = sync.status === 'off' ? 'Solo en este dispositivo'
+    : sync.status === 'offline' ? 'Sin conexión · se sincroniza al volver'
     : sync.status === 'syncing' ? 'Sincronizando…'
     : sync.status === 'error' ? sync.msg
     : sync.at ? `Sincronizado ${ago(sync.at)}` : 'Conectado a GitHub';
