@@ -14,14 +14,22 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Apunte" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&family=Lora:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <title>Apunte</title>
-    <script type="module" crossorigin src="./assets/index-JaIp-Iwb.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-DNt5nsTW.css">
+    <style>
+      /* Pantalla inicial: se ve al instante, ya con el color del tema, antes de que cargue el resto */
+      html { background: #f7f4ee; }
+      @media (prefers-color-scheme: dark) { html:not([data-theme='light']) { background: #151412; } }
+      html[data-theme='dark'] { background: #151412; }
+      body { margin: 0; }
+      #root > .boot { height: 100vh; display: grid; place-items: center; font: 400 2.2rem Georgia, serif; color: #8f8a80; }
+    </style>
+    <script>
+      try { var t = JSON.parse(localStorage.getItem('apunte.settings') || '{}').theme; if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+    </script>
+    <script type="module" crossorigin src="./assets/index-f5ObPyt4.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-C1KSvfYZ.css">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="boot">Apunte</div></div>
   </body>
 </html>
